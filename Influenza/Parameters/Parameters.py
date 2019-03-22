@@ -135,13 +135,13 @@ class Parameters:
 	self.population_highrisk = [(a*b) for (a,b) in zip(self.population, self.proportionHighRisk)]
         self.population_lowrisk = self.population - self.population_highrisk
 	
-	self.TypicalvaccineEfficacyVsInfectionTypical_H1 = self.passedParamValues["vacEfficacy_seasonal"]  * self.relative_TypicalvaccineEfficacyVsInfection_H1
-	self.TypicalvaccineEfficacyVsInfectionTypical_H3 = self.passedParamValues["vacEfficacy_seasonal"]  * self.relative_TypicalvaccineEfficacyVsInfection_H3
-	self.TypicalvaccineEfficacyVsInfectionTypical_B = self.passedParamValues["vacEfficacy_seasonal"] * self.relative_TypicalvaccineEfficacyVsInfection_B
+	self.TypicalvaccineEfficacyVsInfectionTypical_H1 = self.relative_TypicalvaccineEfficacyVsInfection_H1
+	self.TypicalvaccineEfficacyVsInfectionTypical_H3 = self.relative_TypicalvaccineEfficacyVsInfection_H3
+	self.TypicalvaccineEfficacyVsInfectionTypical_B = self.relative_TypicalvaccineEfficacyVsInfection_B
 	
-	self.UniversalvaccineEfficacyVsInfectionUniversal_H1 = self.passedParamValues["vacEfficacy_universal"] [0] * self.relative_UniversalvaccineEfficacyVsInfection_H1
-	self.UniversalvaccineEfficacyVsInfectionUniversal_H3 = self.passedParamValues["vacEfficacy_universal"] [0] * self.relative_UniversalvaccineEfficacyVsInfection_H3
-	self.UniversalvaccineEfficacyVsInfectionUniversal_B = self.passedParamValues["vacEfficacy_universal"] [1] * self.relative_UniversalvaccineEfficacyVsInfection_B
+	self.UniversalvaccineEfficacyVsInfectionUniversal_H1 = self.passedParamValues["vacEfficacy_universal"] 
+	self.UniversalvaccineEfficacyVsInfectionUniversal_H3 = self.passedParamValues["vacEfficacy_universal"] 
+	self.UniversalvaccineEfficacyVsInfectionUniversal_B = self.passedParamValues["vacEfficacy_universal"] 
 
 	# Set up proportion vaccinated vectors
         self.proportionVaccinatedTypicalLPW = PiecewiseAgeRate([0.0] * len(vaccinationAgesTypical),
