@@ -139,9 +139,12 @@ class Parameters:
 	self.TypicalvaccineEfficacyVsInfectionTypical_H3 = self.relative_TypicalvaccineEfficacyVsInfection_H3
 	self.TypicalvaccineEfficacyVsInfectionTypical_B = self.relative_TypicalvaccineEfficacyVsInfection_B
 	
-	self.UniversalvaccineEfficacyVsInfectionUniversal_H1 = self.passedParamValues["vacEfficacy_universal"] 
-	self.UniversalvaccineEfficacyVsInfectionUniversal_H3 = self.passedParamValues["vacEfficacy_universal"] 
-	self.UniversalvaccineEfficacyVsInfectionUniversal_B = self.passedParamValues["vacEfficacy_universal"] 
+	self.UniversalvaccineEfficacyVsInfectionUniversal_H1 = PiecewiseAgeRate([0.75] * len(vaccinationAgesUniversal),
+            vaccinationAgesUniversal)
+	self.UniversalvaccineEfficacyVsInfectionUniversal_H3 = PiecewiseAgeRate([0.75] * len(vaccinationAgesUniversal),
+            vaccinationAgesUniversal)
+	self.UniversalvaccineEfficacyVsInfectionUniversal_B = PiecewiseAgeRate([0.75] * len(vaccinationAgesUniversal),
+            vaccinationAgesUniversal)
 
 	# Set up proportion vaccinated vectors
         self.proportionVaccinatedTypicalLPW = PiecewiseAgeRate([0.0] * len(vaccinationAgesTypical),
