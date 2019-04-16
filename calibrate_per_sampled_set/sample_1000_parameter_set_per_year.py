@@ -149,6 +149,8 @@ if __name__ == "__main__":
                   "seasonal_vaccineEfficacy_H1_0", "seasonal_vaccineEfficacy_H1_0.5",  "seasonal_vaccineEfficacy_H1_9","seasonal_vaccineEfficacy_H1_18","seasonal_vaccineEfficacy_H1_50", "seasonal_vaccineEfficacy_H1_65",
                   "seasonal_vaccineEfficacy_H3_0", "seasonal_vaccineEfficacy_H3_0.5",  "seasonal_vaccineEfficacy_H3_9","seasonal_vaccineEfficacy_H3_18","seasonal_vaccineEfficacy_H3_50", "seasonal_vaccineEfficacy_H1_65",
                   "seasonal_vaccineEfficacy_B_0", "seasonal_vaccineEfficacy_B_0.5",  "seasonal_vaccineEfficacy_B_9","seasonal_vaccineEfficacy_B_18","seasonal_vaccineEfficacy_B_50" , "seasonal_vaccineEfficacy_H1_65",
+                  "age_specific_vaccineEfficacyVsInfection_0", "age_specific_vaccineEfficacyVsInfection_0.5",  "age_specific_vaccineEfficacyVsInfection_5","age_specific_vaccineEfficacyVsInfection_18","age_specific_vaccineEfficacyVsInfection_50",
+              "vaccineEfficacyVsInfection_all_ages",
                    "relative_vaccineEfficacyVsHospitalization_H1_0", "relative_vaccineEfficacyVsHospitalization_H1_0.5", "relative_vaccineEfficacyVsHospitalization_H1_16", "relative_vaccineEfficacyVsHospitalization_H1_65",
                   "relative_vaccineEfficacyVsHospitalization_H3_0", "relative_vaccineEfficacyVsHospitalization_H3_0.5", "relative_vaccineEfficacyVsHospitalization_H3_16", "relative_vaccineEfficacyVsHospitalization_H3_65",
                   "relative_vaccineEfficacyVsHospitalization_B_0", "relative_vaccineEfficacyVsHospitalization_B_0.5", "relative_vaccineEfficacyVsHospitalization_B_16", "relative_vaccineEfficacyVsHospitalization_B_65",
@@ -207,7 +209,19 @@ if __name__ == "__main__":
             prop_high_risk_65 = numpy.random.normal(0.4701, 0.0050)
              
 
-            ##################
+
+            ##################3
+            ##vaccine efficacy against infection.
+            ##ref Table 2 (complete dataset information) of Assessment of influenza vaccine effectiveness in a sentinel surveillance network 2010-13, United States
+            ##Benjamin J. Cowlinga, Shuo Fenga, Lyn Finelli, Andrea Steffens, Ashley Fowlkes
+             
+            vac_eff_inf_0 = 0
+            vac_eff_inf_6mo = numpy.random.triangular(0.5, 0.6, 0.68)
+            vac_eff_inf_5 = numpy.random.triangular(0.35, 0.46, 0.56)
+            vac_eff_inf_18 = numpy.random.triangular(0.26, 0.39, 0.50)
+            vac_eff_inf_50 = numpy.random.triangular(0.08, 0.33, 0.51)
+             
+            vac_eff_inf_all_ages = numpy.random.triangular(0.43, 0.49, 0.54)
              
             #############################
             ##vaccine efficacy against hospitalization
@@ -436,7 +450,8 @@ if __name__ == "__main__":
                         seasonal_vacEfficacy['H1N1']['0'], seasonal_vacEfficacy['H1N1']['0.5-8'],seasonal_vacEfficacy['H1N1']['9-17'],seasonal_vacEfficacy['H1N1']['18-49'],seasonal_vacEfficacy['H1N1']['50-64'], seasonal_vacEfficacy['H1N1']['65+'],
                          seasonal_vacEfficacy['H3N2']['0'], seasonal_vacEfficacy['H3N2']['0.5-8'],seasonal_vacEfficacy['H3N2']['9-17'],seasonal_vacEfficacy['H3N2']['18-49'],seasonal_vacEfficacy['H3N2']['50-64'], seasonal_vacEfficacy['H3N2']['65+'],
                           seasonal_vacEfficacy['B']['0'], seasonal_vacEfficacy['B']['0.5-8'],seasonal_vacEfficacy['B']['9-17'],seasonal_vacEfficacy['B']['18-49'],seasonal_vacEfficacy['B']['50-64'], seasonal_vacEfficacy['B']['65+'],
-                     
+                     vac_eff_inf_0, vac_eff_inf_6mo, vac_eff_inf_5, vac_eff_inf_18, vac_eff_inf_50,
+                    vac_eff_inf_all_ages,
                         relative_vac_eff_hosp_H1_0, relative_vac_eff_hosp_H1_6mo, relative_vac_eff_hosp_H1_16, relative_vac_eff_hosp_H1_65,
                         relative_vac_eff_hosp_H3_0, relative_vac_eff_hosp_H3_6mo, relative_vac_eff_hosp_H3_16, relative_vac_eff_hosp_H3_65,
                         relative_vac_eff_hosp_B_0, relative_vac_eff_hosp_B_6mo, relative_vac_eff_hosp_B_16, relative_vac_eff_hosp_B_65,

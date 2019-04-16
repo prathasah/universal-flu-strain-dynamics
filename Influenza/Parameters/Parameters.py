@@ -139,12 +139,10 @@ class Parameters:
 	self.TypicalvaccineEfficacyVsInfectionTypical_H3 = self.relative_TypicalvaccineEfficacyVsInfection_H3
 	self.TypicalvaccineEfficacyVsInfectionTypical_B = self.relative_TypicalvaccineEfficacyVsInfection_B
 	
-	self.UniversalvaccineEfficacyVsInfectionUniversal_H1 = PiecewiseAgeRate([0.75] * len(vaccinationAgesUniversal),
-            vaccinationAgesUniversal)
-	self.UniversalvaccineEfficacyVsInfectionUniversal_H3 = PiecewiseAgeRate([0.75] * len(vaccinationAgesUniversal),
-            vaccinationAgesUniversal)
-	self.UniversalvaccineEfficacyVsInfectionUniversal_B = PiecewiseAgeRate([0.75] * len(vaccinationAgesUniversal),
-            vaccinationAgesUniversal)
+	self.UniversalvaccineEfficacyVsInfection_H1 =np.array([min(1, num) for num in  ([0.75] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_H3 =np.array([min(1, num) for num in ([0.75] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_B = np.array([min(1, num) for num in ([0.75] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	
 
 	# Set up proportion vaccinated vectors
         self.proportionVaccinatedTypicalLPW = PiecewiseAgeRate([0.0] * len(vaccinationAgesTypical),
@@ -197,12 +195,7 @@ class Parameters:
             self.contactMatrix = cPickle.load(open(contactMatrixFile))
 
 
-        #self.transmissionScaling_H1 = 1.0
-	#self.transmissionScaling_H1 *=  self.R0 / self.computeR0_H1()
-	#self.transmissionScaling_H3 = 1.0
-	#self.transmissionScaling_H3 *=  self.R0 / self.computeR0_H3()
-	#self.transmissionScaling_B = 1.0
-	#self.transmissionScaling_B *=  self.R0 / self.computeR0_B()
+   
     
 	if calibration:
 	    if "betaList" in self.passedParamValues:

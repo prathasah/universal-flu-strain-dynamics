@@ -6,7 +6,7 @@
 from PiecewiseAgeParameter import PiecewiseAgeRate
 import pandas as pd
 #df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-vaccine/Influenza/Parameters/sampled_parameter_set.csv")
-df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-vaccine/calibrate_per_sampled_set/sampled_parameters_with_calibration.csv")
+df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-vaccine-strain-dynamics/calibrate_per_sampled_set/sampled_parameters_with_calibration.csv")
 
 
 def recoveryRatePW(index):
@@ -81,33 +81,46 @@ def relative_UniversalvaccineEfficacyVsInfection_BPW(index):
     [0, 0.5,  5, 18, 50])
 
 """
-def relative_TypicalvaccineEfficacyVsInfection_H1PW(index):
+def TypicalvaccineEfficacyVsInfection_H1PW(index):
     return PiecewiseAgeRate(
-    [df.at[index, "relative_vaccineEfficacyVsInfection_H1_0"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H1_0.5"],
-      df.at[index, "relative_vaccineEfficacyVsInfection_H1_5"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H1_18"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H1_50"]],
+    [df.at[index, "seasonal_vaccineEfficacy_H1_0"],
+     df.at[index, "seasonal_vaccineEfficacy_H1_0.5"],
+      df.at[index, "seasonal_vaccineEfficacy_H1_5"],
+     df.at[index, "seasonal_vaccineEfficacy_H1_18"],
+     df.at[index, "seasonal_vaccineEfficacy_H1_50"]],
     [0, 0.5,  5, 18, 50])
 
-def relative_TypicalvaccineEfficacyVsInfection_H3PW(index):
+def TypicalvaccineEfficacyVsInfection_H3PW(index):
     return PiecewiseAgeRate(
-    [df.at[index, "relative_vaccineEfficacyVsInfection_H3_0"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H3_0.5"],
-      df.at[index, "relative_vaccineEfficacyVsInfection_H3_5"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H3_18"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H3_50"]],
+    [df.at[index, "seasonal_vaccineEfficacy_H3_0"],
+     df.at[index, "seasonal_vaccineEfficacy_H3_0.5"],
+      df.at[index, "seasonal_vaccineEfficacy_H3_5"],
+     df.at[index, "seasonal_vaccineEfficacy_H3_18"],
+     df.at[index, "seasonal_vaccineEfficacy_H3_50"]],
     [0, 0.5,  5, 18, 50])
 
-def relative_TypicalvaccineEfficacyVsInfection_BPW(index):
+def TypicalvaccineEfficacyVsInfection_BPW(index):
     return PiecewiseAgeRate(
-    [df.at[index, "relative_vaccineEfficacyVsInfection_B_0"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_B_0.5"],
-      df.at[index, "relative_vaccineEfficacyVsInfection_B_5"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_B_18"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_B_50"]],
+    [df.at[index, "seasonal_vaccineEfficacy_B_0"],
+     df.at[index, "seasonal_vaccineEfficacy_B_0.5"],
+      df.at[index, "seasonal_vaccineEfficacy_B_5"],
+     df.at[index, "seasonal_vaccineEfficacy_B_18"],
+     df.at[index, "seasonal_vaccineEfficacy_B_50"]],
     [0, 0.5,  5, 18, 50])
 
+
+def age_specific_vaccineEfficacyVsInfectionPW(index):
+    return PiecewiseAgeRate(
+    [df.at[index, "age_specific_vaccineEfficacyVsInfection_0"],
+     df.at[index, "age_specific_vaccineEfficacyVsInfection_0.5"],
+      df.at[index, "age_specific_vaccineEfficacyVsInfection_5"],
+     df.at[index, "age_specific_vaccineEfficacyVsInfection_18"],
+     df.at[index, "age_specific_vaccineEfficacyVsInfection_50"]],
+    [0, 0.5,  5, 18, 50])
+
+
+def vaccineEfficacyVsInfection_all_ages(index):
+    return df.at[index, "vaccineEfficacyVsInfection_all_ages"]
 
 def relative_vaccineEfficacyVsHospitalization_H1PW(index):
     return PiecewiseAgeRate(

@@ -6,6 +6,7 @@ sys.path.insert(0, r'./Influenza/Parameters')
 sys.path.insert(0, r'../Influenza/Parameters')
 sys.path.insert(0, r'../../Influenza/Parameters')
 import Parameters
+import vaccination_coverage as vc
         
 class run_Simulation:
     def __init__(self, options = None, tMin=0 , tMax = 365, paramValues = {}, index=None, calibration = False):
@@ -29,38 +30,7 @@ class run_Simulation:
 
         self.hasSolution = False
 	    
-    def compute_typical_vaccination(self, doses):
-	
-    
-	    
-	    # source :  https://www.cdc.gov/flu/fluvaxview/index.htm	
-	    #------------------------------------------------------------
-	    #Year	|  6m-4y    |5y - 17y  | 18y-49y |50y - 64y|	65y+|
-	    #-----------------------------------------------------------
-	    #2012-13	|	69.8|	53.1   | 31.1	 |45.1	   |	66.2
-	    #2013-14	|	70.4|	55.3   |32.3	 |45.3     |	65
-	    #2014-15	|	70.4|	55.8   |33.5	 |47	   |	66.7
-	    #2015-16	|	70  |	55.9   |32.7	 |43.6	   | 	63.4
-	    #2016-17	|	70  | 	55.6   |33.6	 |45.4	   |	65.3
-	    #----------------------------------------------------------
-	    
-	    ## vaccination uptake in 2016 + adjustment to ensure total vaccines = 150million
-	    
-	    # length of vaccine coverage = 32. First 16 is for low risk people and last sixteen is for high risk people
-	    ## vaccination rate of high risk groups is 1.34 times higher than low risk groups on an average (see data)
-	    vaccination_coverage_low_risk = [ 0.70,  0.56,  0.56, 0.5152, 0.34, 0.34,0.34,0.34,0.34,0.34,
-				   0.46,  0.46, 0.46, 0.653, 0.653, 0.653]
-	    
-	    vaccination_coverage_high_risk = [1.32* num for num in vaccination_coverage_low_risk]
-	    
-	    vaccination_coverage = vaccination_coverage_low_risk + vaccination_coverage_high_risk
 
-	    # assume same vaccination rates for typical and universal vaccine
-	    return vaccination_coverage + vaccination_coverage
-	    
-
-    #def computeR0(self):
-    #    return self.parameters.computeR0()
 
     def getLastValues(self):
         return (self.SUL[-1, :], self.IUL_H1[-1, :], self.IUL_H3[-1, :], self.IUL_B[-1, :], self.RUL_H1[-1, :], self.RUL_H3[-1, :], self.RUL_B[-1, :], 
@@ -854,65 +824,17 @@ class run_Simulation:
 	self._cost_hospitalization_B = self.parameters.costHospitalization * self.hospitalizations_B
 	self.totalCosts_B = self._cost_overcounterMeds_B + self._cost_outpatient_B + self._cost_hospitalization_B
 	
-	
-	"""
-	self.YLL_L = numpy.multiply(self.parameters.expectationOfLife, self.deathsL)
-	self.YLL_H = numpy.multiply(self.parameters.expectationOfLife, self.deathsH)
-	self.YLL = numpy.multiply(self.parameters.expectationOfLife, self.deaths)
-
-	#Years lived with disability
-	################################################################################
-	### Complications cases that are hospitalized. NOTE DALY to be updated with low and high risk groups
-	self._ARDS = numpy.multiply(self.infections, self.parameters.caseARDSfraction)
-	self.YLD_ARDS = self.parameters.disabilityWeightARDS * (numpy.multiply(self._ARDS, self.parameters.expectationOfLife))
-	
-	self._pneumonia = numpy.multiply(self.infections, self.parameters.casePneumoniafraction)
-	self.YLD_pneumonia = self.parameters.disabilityWeightPneumonia * (numpy.multiply(self._pneumonia, self.parameters.durationPneumonia))
-
-	self._HospitalizedComplicated_cases = self._ARDS + self._pneumonia
-	self.YLD_HospitalizedComplicated = self.YLD_ARDS + self.YLD_pneumonia
-	################################################################################
-	## Complications that are not hospitalized
-	
-	self._otitis = numpy.multiply(self.infections, self.parameters.caseOtitisfraction)
-	self.YLD_otitis = self.parameters.disabilityWeightOtitis * (numpy.multiply(self._otitis, self.parameters.durationOtitis))
-	
-	
-	self._deafness = numpy.multiply(self.infections, self.parameters.caseDeafnessfraction)
-	self.YLD_deafness = numpy.multiply(self.parameters.disabilityWeightDeafness, (numpy.multiply(self._deafness, self.parameters.expectationOfLife)))
-	
-	self._NonhospitalizedComplicated_cases =  self._otitis + self._deafness
-	self.YLD_NonhospitalizedComplicated = self.YLD_otitis + self.YLD_deafness
-	################################################################################
-	## Hospitalizations with no complications
-	
-	self._HospitalizedUncomplicated_cases = self.hospitalizations - self._HospitalizedComplicated_cases
-	self.YLD_HospitalizedUncomplicated =  self.parameters.disabilityWeightHospitalizedUncomplicated * numpy.multiply(self._HospitalizedUncomplicated_cases, (1./(self.parameters.recoveryRate*365)))
-	
-	################################################################################
-	## No hospitalizations with no complications 
-	self._NonhospitalizedUncomplicated_cases = self.infections - (self._HospitalizedUncomplicated_cases + self._HospitalizedComplicated_cases + self._NonhospitalizedComplicated_cases)	
-	self.YLD_NonhospitalizedUncomplicated = self.parameters.disabilityWeightUncomplicated * numpy.multiply(self._NonhospitalizedUncomplicated_cases, (1./(self.parameters.recoveryRate*365)))
-	
-	########################################################################
-	##total YLD
-	self.YLD = self.YLD_NonhospitalizedUncomplicated + self.YLD_HospitalizedUncomplicated + self.YLD_HospitalizedComplicated + self.YLD_NonhospitalizedComplicated
-	
-
-	self.DALY = (self.YLL + self.YLD)
-	self.totalDALY = self.DALY.sum()
-	"""
-
-        
         
     def simulate(self):
         self.updateIC()
         self.solve()
         self.updateStats()
 
-    def updateProportionVaccinated(self, PVPWVal, nVacTypes, vacDoses):
+    def updateProportionVaccinated(self, nVacTypes, seasonal_vacDoses, universal_vacDoses):
         # Update propotion vaccinated
-
+	
+	
+	PVPWVal = vc.age_specific_vaccination_coverage()
 	 # Convert flat vector to 2-D array
         if numpy.ndim(PVPWVal) != 2:
 	  
@@ -942,8 +864,8 @@ class run_Simulation:
 	relative_coverage_NH = [num/dosesVaccinatedNL[0] for num in dosesVaccinatedNH]
 	
 	#multiplication factor for final doses
-	xFac_T = vacDoses[0]/(1.*(sum(relative_coverage_TL)+ sum(relative_coverage_TH)))
-	xFac_N = vacDoses[1]/(1.*(sum(relative_coverage_NL)+ sum(relative_coverage_NH)))
+	xFac_T = seasonal_vacDoses/(1.*(sum(relative_coverage_TL)+ sum(relative_coverage_TH)))
+	xFac_N = universal_vacDoses/(1.*(sum(relative_coverage_NL)+ sum(relative_coverage_NH)))
 	
 	    
 	self.doses_TL = [xFac_T * num for num in relative_coverage_TL]
@@ -978,14 +900,34 @@ class run_Simulation:
         return vacsUsedTypical, vacsUsedUniversal
     
         
-    def simulateWithVaccine(self, PVPWVals, vacEfficacy_seasonal, vacEfficacy_universal, vacDoses):
+    def simulateWithVaccine(self, vacEfficacy_seasonal, vacEfficacy_universal, vacDoses_seasonal, vacDoses_universal, vacTimes):
 	
+	self.resetSolution()
         nVacTypes = 2
+	## number of time points vaccines are distributed
+	assert len(vacDoses_seasonal) == len(vacDoses_universal)
+	nvacRounds = len(vacDoses_seasonal)
+        
+	vacsUsed = numpy.empty(nVacRounds)
+	for vacRound in range(nVacRounds):
+	    # Vaccinate the population
+            vacsUsed[vacRound] = self.updateProportionVaccinated(nVacTypes, vacDoses_seasonal[vacRound], vacDoses_universal[vacRound])
 
-        self.resetSolution()
+            # Run from now until
+            if vacRound + 1 < nVacRounds:
+                # Next vaccine
+                tEnd = vacTimes[vacRound + 1]
+            else:
+                # End time
+                tEnd = self.tMax
+	    self.solve(tStart = vacTimes[vacRound], tEnd = tEnd)
+
+        self.updateStats()
+
+        return vacsUsed
 
         # Vaccinate the population
-	vacsUsedTypical, vacsUsedUniversal = self.updateProportionVaccinated(PVPWVals, nVacTypes, vacDoses)
+	vacsUsedTypical, vacsUsedUniversal = self.updateProportionVaccinated(nVacTypes,vacDoses_seasonal[vacRound], vacDoses_universal[vacRound])
 	
 	if vacsUsedUniversal <0 and min(list(PVPWVals)) >0 : print ("check!!!!"), PVPWVals, nVacTypes, vacsUsedUniversal
         tEnd = self.tMax
@@ -993,15 +935,6 @@ class run_Simulation:
 	self.solve(tStart = tStart, tEnd = tEnd)
 	
 	self.updateStats()
-	
-	#import matplotlib.pyplot as plt
-	#times = [num for num in xrange(tEnd+1)]
-	#plt.plot(times, (self.IUL_H1).sum(axis=1), color = "red", linestyle= "-")
-	#plt.plot(times, (self.IUL_H3).sum(axis=1), color = "blue", linestyle= "-")
-	#plt.plot(times, (self.IUL_B).sum(axis=1), color = "green", linestyle = "-")	 
-	#plt.show()
-	
-        
 
 	return vacsUsedTypical, vacsUsedUniversal
 
