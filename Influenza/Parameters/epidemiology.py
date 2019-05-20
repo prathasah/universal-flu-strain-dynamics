@@ -5,18 +5,23 @@
 
 from PiecewiseAgeParameter import PiecewiseAgeRate
 import pandas as pd
+
+
 #df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-vaccine/Influenza/Parameters/sampled_parameter_set.csv")
-df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-vaccine-strain-dynamics/calibrate_per_sampled_set/sampled_parameters_with_calibration.csv")
+def read_file(year, index) :
+    df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/sampled_parameter_1000_set_year_"+year+"_10May2019.csv")
+    return df
 
-
-def recoveryRatePW(index):
+def recoveryRatePW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [1/(1.*df.at[index, "infectious_period_0"]),
      1/(1.*df.at[index, "infectious_period_15"])],
     [0, 15])
 
 
-def proportionHighRiskPW(index):
+def proportionHighRiskPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "proportionHighRisk_0"],
      df.at[index, "proportionHighRisk_2"],
@@ -27,89 +32,30 @@ def proportionHighRiskPW(index):
      df.at[index, "proportionHighRisk_65"]],
     [0, 2, 5, 19, 25, 50, 65])
 
-def susceptibility_H1PW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "susceptibility_H1_0"],
-     df.at[index, "susceptibility_H1_5"],
-     df.at[index, "susceptibility_H1_25"],
-     df.at[index, "susceptibility_H1_65"]],
-    [0, 5, 25, 65])
-
-def susceptibility_H3PW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "susceptibility_H3_0"],
-     df.at[index, "susceptibility_H3_5"],
-     df.at[index, "susceptibility_H3_25"],
-     df.at[index, "susceptibility_H3_65"]],
-    [0, 5, 25, 65])
-
-def susceptibility_BPW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "susceptibility_B_0"],
-     df.at[index, "susceptibility_B_5"],
-     df.at[index, "susceptibility_B_25"],
-     df.at[index, "susceptibility_B_65"]],
-    [0, 5, 25, 65])
-
-"""
-#we assume 75% efficacy for all ages receiving universal vaccine
-def relative_UniversalvaccineEfficacyVsInfection_H1PW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "relative_vaccineEfficacyVsInfection_H1_0"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H1_0.5"],
-      df.at[index, "relative_vaccineEfficacyVsInfection_H1_5"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H1_18"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H1_50"]],
-    [0, 0.5,  5, 18, 50])
-
-def relative_UniversalvaccineEfficacyVsInfection_H3PW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "relative_vaccineEfficacyVsInfection_H3_0"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H3_0.5"],
-      df.at[index, "relative_vaccineEfficacyVsInfection_H3_5"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H3_18"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_H3_50"]],
-    [0, 0.5,  5, 18, 50])
-
-def relative_UniversalvaccineEfficacyVsInfection_BPW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "relative_vaccineEfficacyVsInfection_B_0"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_B_0.5"],
-      df.at[index, "relative_vaccineEfficacyVsInfection_B_5"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_B_18"],
-     df.at[index, "relative_vaccineEfficacyVsInfection_B_50"]],
-    [0, 0.5,  5, 18, 50])
-
-"""
-def TypicalvaccineEfficacyVsInfection_H1PW(index):
+def SeasonalVaccineEfficacyVsInfection_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "seasonal_vaccineEfficacy_H1_0"],
      df.at[index, "seasonal_vaccineEfficacy_H1_0.5"],
-      df.at[index, "seasonal_vaccineEfficacy_H1_5"],
+      df.at[index, "seasonal_vaccineEfficacy_H1_9"],
      df.at[index, "seasonal_vaccineEfficacy_H1_18"],
-     df.at[index, "seasonal_vaccineEfficacy_H1_50"]],
-    [0, 0.5,  5, 18, 50])
+     df.at[index, "seasonal_vaccineEfficacy_H1_50"],
+     df.at[index, "seasonal_vaccineEfficacy_H1_65"]],
+    [0, 0.5,  5, 18, 50, 65])
 
-def TypicalvaccineEfficacyVsInfection_H3PW(index):
+def SeasonalVaccineEfficacyVsInfection_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "seasonal_vaccineEfficacy_H3_0"],
      df.at[index, "seasonal_vaccineEfficacy_H3_0.5"],
-      df.at[index, "seasonal_vaccineEfficacy_H3_5"],
+      df.at[index, "seasonal_vaccineEfficacy_H3_9"],
      df.at[index, "seasonal_vaccineEfficacy_H3_18"],
-     df.at[index, "seasonal_vaccineEfficacy_H3_50"]],
-    [0, 0.5,  5, 18, 50])
+     df.at[index, "seasonal_vaccineEfficacy_H3_50"],
+     df.at[index, "seasonal_vaccineEfficacy_H3_65"]],
+    [0, 0.5,  5, 18, 50, 65])
 
-def TypicalvaccineEfficacyVsInfection_BPW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "seasonal_vaccineEfficacy_B_0"],
-     df.at[index, "seasonal_vaccineEfficacy_B_0.5"],
-      df.at[index, "seasonal_vaccineEfficacy_B_5"],
-     df.at[index, "seasonal_vaccineEfficacy_B_18"],
-     df.at[index, "seasonal_vaccineEfficacy_B_50"]],
-    [0, 0.5,  5, 18, 50])
-
-
-def age_specific_vaccineEfficacyVsInfectionPW(index):
+def age_specific_vaccineEfficacyVsInfectionPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "age_specific_vaccineEfficacyVsInfection_0"],
      df.at[index, "age_specific_vaccineEfficacyVsInfection_0.5"],
@@ -119,10 +65,23 @@ def age_specific_vaccineEfficacyVsInfectionPW(index):
     [0, 0.5,  5, 18, 50])
 
 
-def vaccineEfficacyVsInfection_all_ages(index):
+def vaccineEfficacyVsInfection_all_ages(year, index):
+    df= read_file(year, index)
     return df.at[index, "vaccineEfficacyVsInfection_all_ages"]
 
-def relative_vaccineEfficacyVsHospitalization_H1PW(index):
+def SeasonalVaccineEfficacyVsInfection_BPW(year, index):
+    df= read_file(year, index)
+    return PiecewiseAgeRate(
+    [df.at[index, "seasonal_vaccineEfficacy_B_0"],
+     df.at[index, "seasonal_vaccineEfficacy_B_0.5"],
+      df.at[index, "seasonal_vaccineEfficacy_B_9"],
+     df.at[index, "seasonal_vaccineEfficacy_B_18"],
+     df.at[index, "seasonal_vaccineEfficacy_B_50"],
+     df.at[index, "seasonal_vaccineEfficacy_B_65"]],
+    [0, 0.5,  5, 18, 50, 65])
+
+def relative_vaccineEfficacyVsHospitalization_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_vaccineEfficacyVsHospitalization_H1_0"],
      df.at[index, "relative_vaccineEfficacyVsHospitalization_H1_0.5"],
@@ -130,7 +89,8 @@ def relative_vaccineEfficacyVsHospitalization_H1PW(index):
      df.at[index, "relative_vaccineEfficacyVsHospitalization_H1_65"]],
     [0, 0.5, 16, 65])
 
-def relative_vaccineEfficacyVsHospitalization_H3PW(index):
+def relative_vaccineEfficacyVsHospitalization_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_vaccineEfficacyVsHospitalization_H3_0"],
      df.at[index, "relative_vaccineEfficacyVsHospitalization_H3_0.5"],
@@ -138,7 +98,8 @@ def relative_vaccineEfficacyVsHospitalization_H3PW(index):
      df.at[index, "relative_vaccineEfficacyVsHospitalization_H3_65"]],
     [0, 0.5, 16, 65])
 
-def relative_vaccineEfficacyVsHospitalization_BPW(index):
+def relative_vaccineEfficacyVsHospitalization_BPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_vaccineEfficacyVsHospitalization_B_0"],
      df.at[index, "relative_vaccineEfficacyVsHospitalization_B_0.5"],
@@ -146,63 +107,36 @@ def relative_vaccineEfficacyVsHospitalization_BPW(index):
      df.at[index, "relative_vaccineEfficacyVsHospitalization_B_65"]],
     [0, 0.5, 16, 65])
 
-def relative_vaccineEfficacyVsDeath_H1PW(index):
+def relative_vaccineEfficacyVsDeath_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_vaccineEfficacyVsDeath_H1_0"],
      df.at[index, "relative_vaccineEfficacyVsDeath_H1_0.5"],
-     df.at[index, "relative_vaccineEfficacyVsDeath_H1_9"],
      df.at[index, "relative_vaccineEfficacyVsDeath_H1_18"],
-     df.at[index, "relative_vaccineEfficacyVsDeath_H1_50"],
      df.at[index, "relative_vaccineEfficacyVsDeath_H1_65"]],
-    [0, 0.5, 9,18,50, 65])
+    [0, 0.5, 18, 65])
 
-def relative_vaccineEfficacyVsDeath_H3PW(index):
+def relative_vaccineEfficacyVsDeath_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_vaccineEfficacyVsDeath_H3_0"],
      df.at[index, "relative_vaccineEfficacyVsDeath_H3_0.5"],
-     df.at[index, "relative_vaccineEfficacyVsDeath_H3_9"],
      df.at[index, "relative_vaccineEfficacyVsDeath_H3_18"],
-     df.at[index, "relative_vaccineEfficacyVsDeath_H3_50"],
      df.at[index, "relative_vaccineEfficacyVsDeath_H3_65"]],
-    [0, 0.5, 9,18,50, 65])
+    [0, 0.5,18, 65])
 
-def relative_vaccineEfficacyVsDeath_BPW(index):
+def relative_vaccineEfficacyVsDeath_BPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_vaccineEfficacyVsDeath_B_0"],
      df.at[index, "relative_vaccineEfficacyVsDeath_B_0.5"],
-     df.at[index, "relative_vaccineEfficacyVsDeath_B_9"],
      df.at[index, "relative_vaccineEfficacyVsDeath_B_18"],
-     df.at[index, "relative_vaccineEfficacyVsDeath_B_50"],
      df.at[index, "relative_vaccineEfficacyVsDeath_B_65"]],
-    [0, 0.5, 9,18,50, 65])
+    [0, 0.5,18,65])
 
-"""
-def highRiskvaccineEfficacyVsDeath_H1PW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "highRiskvaccineEfficacyVsDeath_H1_0"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_H1_0.5"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_H1_18"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_H1_65"]],
-    [0, 0.5, 18,65])
 
-def highRiskvaccineEfficacyVsDeath_H3PW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "highRiskvaccineEfficacyVsDeath_H3_0"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_H3_0.5"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_H3_18"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_H3_65"]],
-    [0, 0.5, 18,65])
-
-def highRiskvaccineEfficacyVsDeath_BPW(index):
-    return PiecewiseAgeRate(
-    [df.at[index, "highRiskvaccineEfficacyVsDeath_B_0"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_B_0.5"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_B_18"],
-     df.at[index, "highRiskvaccineEfficacyVsDeath_B_65"]],
-    [0, 0.5, 18,65])
-"""
-
-def relative_prob_deathPW(index):
+def relative_prob_deathPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_prob_death_0"],
      df.at[index, "relative_prob_death_5"],
@@ -211,7 +145,8 @@ def relative_prob_deathPW(index):
     df.at[index, "relative_prob_death_65"]],
     [0, 5, 18, 50, 65])
 
-def ratio_death_strain_H1PW(index):
+def ratio_death_strain_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_death_strain_H1_0"],
      df.at[index, "ratio_death_strain_H1_5"],
@@ -220,7 +155,8 @@ def ratio_death_strain_H1PW(index):
     df.at[index, "ratio_death_strain_H1_65"]],
     [0, 5, 18, 50, 65])
 
-def ratio_death_strain_H3PW(index):
+def ratio_death_strain_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_death_strain_H3_0"],
      df.at[index, "ratio_death_strain_H3_5"],
@@ -230,7 +166,8 @@ def ratio_death_strain_H3PW(index):
     [0, 5, 18, 50, 65])
 
 
-def ratio_death_highrisk_H1PW(index):
+def ratio_death_highrisk_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_death_highrisk_H1_0"],
      df.at[index, "ratio_death_highrisk_H1_5"],
@@ -239,7 +176,8 @@ def ratio_death_highrisk_H1PW(index):
     df.at[index, "ratio_death_highrisk_H1_65"]],
     [0, 5, 18, 50, 65])
 
-def ratio_death_highrisk_H3PW(index):
+def ratio_death_highrisk_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_death_highrisk_H3_0"],
      df.at[index, "ratio_death_highrisk_H3_5"],
@@ -249,7 +187,8 @@ def ratio_death_highrisk_H3PW(index):
     [0, 5, 18, 50, 65])
 
 
-def ratio_death_highrisk_BPW(index):
+def ratio_death_highrisk_BPW(year, index):
+    df= read_file(year, index)    
     return PiecewiseAgeRate(
     [df.at[index, "ratio_death_highrisk_B_0"],
      df.at[index, "ratio_death_highrisk_B_5"],
@@ -259,7 +198,8 @@ def ratio_death_highrisk_BPW(index):
     [0, 5, 18, 50, 65])
 
 
-def relative_prob_hospPW(index):
+def relative_prob_hospPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "relative_prob_hosp_0"],
      df.at[index, "relative_prob_hosp_5"],
@@ -268,9 +208,8 @@ def relative_prob_hospPW(index):
     df.at[index, "relative_prob_hosp_65"]],
     [0, 5, 18, 50,65])
 
-
-
-def ratio_hosp_highrisk_H1PW(index):
+def ratio_hosp_highrisk_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_hosp_highrisk_H1_0"],
      df.at[index, "ratio_hosp_highrisk_H1_5"],
@@ -281,7 +220,8 @@ def ratio_hosp_highrisk_H1PW(index):
     [0, 5, 18, 50, 65, 75])
 
 
-def ratio_hosp_highrisk_H3PW(index):
+def ratio_hosp_highrisk_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_hosp_highrisk_H3_0"],
      df.at[index, "ratio_hosp_highrisk_H3_5"],
@@ -293,7 +233,8 @@ def ratio_hosp_highrisk_H3PW(index):
 
 
 
-def ratio_hosp_highrisk_BPW(index):
+def ratio_hosp_highrisk_BPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "ratio_hosp_highrisk_B_0"],
      df.at[index, "ratio_hosp_highrisk_B_5"],
@@ -304,7 +245,8 @@ def ratio_hosp_highrisk_BPW(index):
     [0, 5, 18, 50, 65, 75])
 
 
-def lowRiskhospitalizationRate_H1PW(index):
+def lowRiskhospitalizationRate_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "lowRiskhospitalizationRate_H1_0"],
      df.at[index, "lowRiskhospitalizationRate_H1_5"],
@@ -314,7 +256,8 @@ def lowRiskhospitalizationRate_H1PW(index):
     df.at[index, "lowRiskhospitalizationRate_H1_75"]],
     [0, 5, 18, 50, 65, 75])
 
-def lowRiskhospitalizationRate_H3PW(index):
+def lowRiskhospitalizationRate_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "lowRiskhospitalizationRate_H3_0"],
      df.at[index, "lowRiskhospitalizationRate_H3_5"],
@@ -324,7 +267,8 @@ def lowRiskhospitalizationRate_H3PW(index):
     df.at[index, "lowRiskhospitalizationRate_H3_75"]],
     [0, 5, 18, 50, 65, 75])
 
-def lowRiskhospitalizationRate_BPW(index):
+def lowRiskhospitalizationRate_BPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "lowRiskhospitalizationRate_B_0"],
      df.at[index, "lowRiskhospitalizationRate_B_5"],
@@ -334,7 +278,8 @@ def lowRiskhospitalizationRate_BPW(index):
     df.at[index, "lowRiskhospitalizationRate_B_75"]],
     [0, 5, 18, 50, 65, 75])
 
-def highRiskhospitalizationRate_H1PW(index):
+def highRiskhospitalizationRate_H1PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "highRiskhospitalizationRate_H1_0"],
      df.at[index, "highRiskhospitalizationRate_H1_5"],
@@ -344,7 +289,8 @@ def highRiskhospitalizationRate_H1PW(index):
     df.at[index, "highRiskhospitalizationRate_H1_75"]],
     [0, 5, 18, 50, 65, 75])
 
-def highRiskhospitalizationRate_H3PW(index):
+def highRiskhospitalizationRate_H3PW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "highRiskhospitalizationRate_H3_0"],
      df.at[index, "highRiskhospitalizationRate_H3_5"],
@@ -354,7 +300,8 @@ def highRiskhospitalizationRate_H3PW(index):
     df.at[index, "highRiskhospitalizationRate_H3_75"]],
     [0, 5, 18, 50, 65, 75])
 
-def highRiskhospitalizationRate_BPW(index):
+def highRiskhospitalizationRate_BPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "highRiskhospitalizationRate_B_0"],
      df.at[index, "highRiskhospitalizationRate_B_5"],
@@ -365,7 +312,8 @@ def highRiskhospitalizationRate_BPW(index):
     [0, 5, 18, 50, 65, 75])
 
 
-def lowRiskOutpatientProbPW(index):
+def lowRiskOutpatientProbPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "prob_outpatient_lowrisk_0"],
      df.at[index, "prob_outpatient_lowrisk_5"],
@@ -373,33 +321,68 @@ def lowRiskOutpatientProbPW(index):
     df.at[index, "prob_outpatient_lowrisk_65"]],
     [0, 5, 18, 65])
 
-def highRiskOutpatientProbPW(index):
+def highRiskOutpatientProbPW(year, index):
+    df= read_file(year, index)
     return PiecewiseAgeRate(
     [df.at[index, "prob_outpatient_highrisk_0"],
      df.at[index, "prob_outpatient_highrisk_5"],
      df.at[index, "prob_outpatient_highrisk_18"],
     df.at[index, "prob_outpatient_highrisk_65"]],
     [0, 5, 18, 65])
+"""
+def susceptibility_H1PW(year, index):
+    df= read_file(year, index)
+    return PiecewiseAgeRate(
+    [df.at[index, "susceptibility_H1_0"],
+     df.at[index, "susceptibility_H1_5"],
+     df.at[index, "susceptibility_H1_25"],
+     df.at[index, "susceptibility_H1_65"]],
+    [0, 5, 25, 65])
 
-def transmissionScaling_H1(index):
+def susceptibility_H3PW(year, index):
+    df= read_file(year, index)
+    return PiecewiseAgeRate(
+    [df.at[index, "susceptibility_H3_0"],
+     df.at[index, "susceptibility_H3_5"],
+     df.at[index, "susceptibility_H3_25"],
+     df.at[index, "susceptibility_H3_65"]],
+    [0, 5, 25, 65])
+
+def susceptibility_BPW(year, index):
+    df= read_file(year, index)
+    return PiecewiseAgeRate(
+    [df.at[index, "susceptibility_B_0"],
+     df.at[index, "susceptibility_B_5"],
+     df.at[index, "susceptibility_B_25"],
+     df.at[index, "susceptibility_B_65"]],
+    [0, 5, 25, 65])
+
+def transmissionScaling_H1(year, index):
+    df= read_file(year, index)
     return df.at[index, "beta_H1"]
 
-def transmissionScaling_H3(index):
+def transmissionScaling_H3(year, index):
+    df= read_file(year, index)
     return df.at[index, "beta_H3"]
 
-def transmissionScaling_B(index):
+def transmissionScaling_B(year, index):
+    df= read_file(year, index)
     return df.at[index, "beta_B"]
 
-def vac_eff_hospitalization(index):
+def vac_eff_hospitalization(year, index):
+    df= read_file(year, index)
     return df.at[index, "vac_eff_hospitalization"]
 
-def vac_eff_mortality(index):
+def vac_eff_mortality(year, index):
+    df= read_file(year, index)
     return df.at[index, "vac_eff_mortality"]
 
-def prob_hosp_scaling(index):
+def prob_hosp_scaling(year, index):
+    df= read_file(year, index)
     return df.at[index, "prob_hosp_scaling"]
 
-def prob_death_scaling(index):
+def prob_death_scaling(year, index):
+    df= read_file(year, index)
     return df.at[index, "prob_death_scaling"]
 
-
+"""
