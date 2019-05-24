@@ -31,11 +31,13 @@ def run_simulation_incidence(paramList, year, sub_iter):
     
     vacEfficacy_universal = 0
     proportional_vacDoses_universal = 0
+    start = time.time()
     ##set 1 for all hospitalization and death efficacy and scaling parameters. Calibrate these in step#2
     s = Simulation.run_Simulation(season = year, proportion_universalVaccine_doses = proportional_vacDoses_universal,paramValues = {"vacEfficacy_universal":vacEfficacy_universal, "betaList": paramList[0:3], "susceptibility_H1": paramList[3:7], "susceptibility_H3": paramList[7:11], "susceptibility_B": paramList[11:15],
  "vac_eff_hospitalization": 1, "vac_eff_mortality": 1, "prob_hosp_scaling": 1, "prob_death_scaling": 1}, index = sub_iter, calibration = True)
     seasonal_vacDoses, universal_vacDoses, total_doses = s.doses_used()
     print ("doses used  ===="), sub_iter, seasonal_vacDoses/1e6, universal_vacDoses/1e6, total_doses/1e6
+    print ("time ==="), time.time() - start
     
     incidenceL, incidenceH, infections_H1, infections_H3, infections_B, perc_H1, perc_H3, perc_B,hospitalizationsL, hospitalizationsH, deathsL, deathsH = s.calibration_output()
 	

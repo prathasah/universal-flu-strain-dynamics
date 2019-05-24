@@ -6,6 +6,7 @@ import costs
 import os
 import numpy as np
 import types
+import pandas as pd
 #from .. import fileIO
 
 
@@ -22,12 +23,12 @@ class ParamDict(UserDict.UserDict):
 	return getattr(other, key)
 
 
-    def epi_valueOrAttrFromOther(self, key, other, season, index):
+    def epi_valueOrAttrFromOther(self, key, other, df, index):
         '''
         Return value if key is in paramValues dict or return
         default as attribute from object other.
         '''
-	return (getattr(other, key))(season, index)
+	return (getattr(other, key))(df, index)
     
 class Parameters:
     def setPWAttr(self, namePW, value):
@@ -76,24 +77,24 @@ class Parameters:
 	
         setattr(self, name, value.full(self.ages))
     
-    def epi_setPWAttrFromPassedOrOther(self, other, namePW, season, index):
+    def epi_setPWAttrFromPassedOrOther(self, other, namePW, df, index):
         '''
         Set a piecewise attribute as self.namePW
         and its expanded value as self.name,
         taking values from passed paramValues
         or from attributes of object other.
         '''
-	self.epi_setPWAttr(namePW,self.passedParamValues.epi_valueOrAttrFromOther(namePW, other, season, index))
+	self.epi_setPWAttr(namePW,self.passedParamValues.epi_valueOrAttrFromOther(namePW, other, df, index))
 	
 
-    def epi_setAttrFromPassedOrOther(self, other, name, season, index):
+    def epi_setAttrFromPassedOrOther(self, other, name, df, index):
         '''
         Set an attribute as self.name,
         taking value from passed paramValues
         or from attributes of object other.
         '''
 	setattr(self, name, 
-                self.passedParamValues.epi_valueOrAttrFromOther(name, other, season, index))
+                self.passedParamValues.epi_valueOrAttrFromOther(name, other, df, index))
 
 ##################################################################
 
@@ -118,17 +119,18 @@ class Parameters:
 		    self.setPWAttrFromPassedOrOther(m, p)
 
 		    
-	    
+	## read file for epidemiology code
+	df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/sampled_parameter_1000_set_year_"+season+"_10May2019.csv")
         for p in dir(epidemiology):
 	    #if module returns a numbers, then..
 	    func = getattr(epidemiology, p)
 	    if isinstance(func,types.FunctionType):
     
-		if isinstance(func(season, index),(float, int)):
-		    self.epi_setAttrFromPassedOrOther(epidemiology,p, season, index)
+		if isinstance(func(df, index),(float, int)):
+		    self.epi_setAttrFromPassedOrOther(epidemiology,p, df, index)
 		##if it is an agespecific parameter then..
-		elif isinstance(func(season, index), PiecewiseAgeParameter): 
-			self.epi_setPWAttrFromPassedOrOther(epidemiology,p, season, index)
+		elif isinstance(func(df, index), PiecewiseAgeParameter): 
+			self.epi_setPWAttrFromPassedOrOther(epidemiology,p, df, index)
 
 
 	self.population_highrisk = self.population * self.proportionHighRisk
