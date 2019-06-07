@@ -5,11 +5,10 @@ import numpy as np
 import Simulation
 import pandas as pd
 
-def run_efficacy_simulation(vacEfficacy_universal, vacEfficacy_seasonal, vacDoses, sub_iter):
-	s = Simulation.run_Simulation(paramValues = {"vacEfficacy_universal":vacEfficacy_universal, "vacEfficacy_seasonal": vacEfficacy_seasonal}, index = sub_iter)
-	vaccineCoverage = s.compute_typical_vaccination(vacDoses)
-	vacsUsedTypical, vacsUsedUniversal = s.simulateWithVaccine(vaccineCoverage, vacEfficacy_seasonal, vacEfficacy_universal, vacDoses)
-	#print ("check seasonal, universal doses "), vacsUsedTypical, vacsUsedUniversal
+def run_efficacy_simulation(season, sub_iter):
+	s = Simulation.run_Simulation(season = season, index = sub_iter)
+	seasonal_vacDoses, universal_vacDoses, total_doses = s.doses_used()
+	print ("check seasonal, universal doses "), seasonal_vacDoses, universal_vacDoses
 	incidenceL, incidenceH, infections_H1, infections_H3, infections_B, perc_H1, perc_H3, perc_B,hospitalizationsL, hospitalizationsH, deathsL, deathsH = s.calibration_output()
 	return incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH
 		
@@ -18,8 +17,9 @@ def run_efficacy_simulation(vacEfficacy_universal, vacEfficacy_seasonal, vacDose
 if __name__ == "__main__":
 	
 	
-	df = pd.read_csv("sampled_parameters_with_calibration.csv")
-	data_infections = df['data_incidence_x'].tolist()
+	df = pd.read_csv("./1.calibration_results_May28_2019/results_calibrated_parameters_year_2011-12_COMBINED_May28_2019.csv")
+	data_year = df['year'].tolist()
+	data_infections = df['data_incidence'].tolist()
 	data_hosp = df['data_hospitalizations'].tolist()
 	data_death = df['data_mortality'].tolist()
 	data_incidence_H1_0 = df['data_H1_0'].tolist()
@@ -38,7 +38,6 @@ if __name__ == "__main__":
 	
 	incidence = []
 	hosp = []
-	total_doses = 141950000.0
 	mort = []
 	calib_incid = []
 	calib_hosp = []
@@ -56,16 +55,9 @@ if __name__ == "__main__":
 	incidence_B_25 = []
 	incidence_B_65 = []
 	
-	for sub_index in xrange(5000):
+	for sub_index in xrange(1):
 		print sub_index
-		scenario = 0
-		dose2 = scenario * total_doses
-		dose1 = total_doses - dose2
-		doses = [dose1, dose2]
-		#print ("doses"), doses, total_doses
-		universal_efficacy = [0,0]
-		seasonal_efficacy  = 0.46
-		incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH = run_efficacy_simulation(universal_efficacy, seasonal_efficacy,  doses, sub_index)
+		incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH = run_efficacy_simulation(data_year[sub_index], sub_index)
 		
 		
 		hosp_raw = sum(hospitalizationsL) + sum(hospitalizationsH)

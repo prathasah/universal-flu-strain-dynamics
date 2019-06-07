@@ -4,7 +4,6 @@
 #
 
 from PiecewiseAgeParameter import PiecewiseAgeRate
-import pandas as pd
 
 def recoveryRatePW(df, index):
     
@@ -323,7 +322,7 @@ def highRiskOutpatientProbPW(df, index):
      df.at[index, "prob_outpatient_highrisk_18"],
     df.at[index, "prob_outpatient_highrisk_65"]],
     [0, 5, 18, 65])
-"""
+
 def susceptibility_H1PW(df, index):
     
     return PiecewiseAgeRate(
@@ -376,7 +375,6 @@ def prob_hosp_scaling(df, index):
     return df.at[index, "prob_hosp_scaling"]
 
 def prob_death_scaling(df, index):
-    
+
     return df.at[index, "prob_death_scaling"]
 
-"""

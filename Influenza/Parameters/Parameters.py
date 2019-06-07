@@ -98,31 +98,42 @@ class Parameters:
 
 ##################################################################
 
-    def __init__(self, season, index, calibration, **paramValues):
+    def __init__(self, season, index, calibration = False, optimization = False, **paramValues):
 
 	self.passedParamValues = ParamDict(paramValues)	
 
 	self.ages = numpy.array(ages)
+	
+	
+	self.population = demography.return_demography(season).full(self.ages)
 
         # Load in parameters and expand as necessary
 	# Go through each files
-        for m in (demography, costs):
-	    # list all the modules
-            for p in dir(m):
-		#if module returns a numbers, then..
-                if isinstance(getattr(m, p),(float, int)):
-		    self.setAttrFromPassedOrOther(m, p)
+	for p in dir(costs):
+	    #if module returns a numbers, then..
+	    if isinstance(getattr(costs, p),(float, int)):
+		self.setAttrFromPassedOrOther(costs, p)
 
-		##if it is an agespecific parameter then..
-                elif isinstance(getattr(m, p),
-                                PiecewiseAgeParameter): 
-		    self.setPWAttrFromPassedOrOther(m, p)
-
+	    ##if it is an agespecific parameter then..
+	    elif isinstance(getattr(costs, p),
+			    PiecewiseAgeParameter): 
+		self.setPWAttrFromPassedOrOther(costs, p)
+		
+	if optimization:
+	    if not "PVuniversal" in self.passedParamValues:
+		print ("Warning! No PVuniversal value supplied.")
+	    
+	    self.PVuniversal = np.array(self.passedParamValues["PVuniversal"])
+	    
 		    
 	## read file for epidemiology code
-	df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/sampled_parameter_1000_set_year_"+season+"_10May2019.csv")
+	if calibration:
+	    df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/sampled_parameter_1000_set_year_"+season+"_10May2019.csv")
+	else:
+	    df = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/1.calibration_results_May28_2019/1.results_calibrated_parameters_year_2011-12_COMBINED_May28_2019.csv")
         for p in dir(epidemiology):
 	    #if module returns a numbers, then..
+	    if calibration and p in ["prob_death_scaling", "prob_hosp_scaling", "transmissionScaling_H1", "transmissionScaling_H3", "transmissionScaling_B", "vac_eff_hospitalization", "vac_eff_mortality", "susceptibility_H1PW", "susceptibility_H3PW", "susceptibility_BPW"]: continue
 	    func = getattr(epidemiology, p)
 	    if isinstance(func,types.FunctionType):
     
@@ -132,13 +143,8 @@ class Parameters:
 		elif isinstance(func(df, index), PiecewiseAgeParameter): 
 			self.epi_setPWAttrFromPassedOrOther(epidemiology,p, df, index)
 
-
 	self.population_highrisk = self.population * self.proportionHighRisk
         self.population_lowrisk = self.population - self.population_highrisk
-	
-	self.UniversalvaccineEfficacyVsInfection_H1 =np.array([min(1, num) for num in  ([0.75] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
-	self.UniversalvaccineEfficacyVsInfection_H3 =np.array([min(1, num) for num in ([0.75] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
-	self.UniversalvaccineEfficacyVsInfection_B = np.array([min(1, num) for num in ([0.75] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
 		
 
         # Get contact matrix
@@ -154,7 +160,17 @@ class Parameters:
 
 
    
-    
+	if "universalVac_efficacy" in self.passedParamValues:
+	    self.Universalvaccine_efficacy = self.passedParamValues["universalVac_efficacy"]
+	else: self.Universalvaccine_efficacy =  [0.75,0.75, 0.75]
+	
+	
+	self.UniversalvaccineEfficacyVsInfection_H1 =np.array([min(1, num) for num in  (self.Universalvaccine_efficacy[0] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_H3 =np.array([min(1, num) for num in (self.Universalvaccine_efficacy[1] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_B = np.array([min(1, num) for num in (self.Universalvaccine_efficacy[2] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	
+	
+	
 	if calibration:
 	    if "betaList" in self.passedParamValues:
 		self.transmissionScaling_H1 =  self.passedParamValues["betaList"][0]
