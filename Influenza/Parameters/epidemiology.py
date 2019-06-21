@@ -350,15 +350,15 @@ def susceptibility_BPW(df, index):
      df.at[index, "susceptibility_B_65"]],
     [0, 5, 25, 65])
 
-def transmissionScaling_H1(df, index):
+def beta_H1(df, index):
     
     return df.at[index, "beta_H1"]
 
-def transmissionScaling_H3(df, index):
+def beta_H3(df, index):
     
     return df.at[index, "beta_H3"]
 
-def transmissionScaling_B(df, index):
+def beta_B(df, index):
     
     return df.at[index, "beta_B"]
 

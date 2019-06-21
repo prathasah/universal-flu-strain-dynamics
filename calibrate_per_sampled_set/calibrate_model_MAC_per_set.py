@@ -13,6 +13,13 @@ from scipy.optimize import basinhopping
 import time
 from copy import deepcopy
 ##########################################
+def run_efficacy_simulation(season, sub_iter):
+	s = Simulation.run_Simulation(season = season, index = sub_iter)
+	seasonal_vacDoses, universal_vacDoses, total_doses = s.doses_used()
+	print ("check seasonal, universal doses "), seasonal_vacDoses, universal_vacDoses
+	incidenceL, incidenceH, infections_H1, infections_H3, infections_B, perc_H1, perc_H3, perc_B,hospitalizationsL, hospitalizationsH, deathsL, deathsH = s.calibration_output()
+	return incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH
+##########################################
 result_list = []
 def log_results(result):
     result_list.append(result)
@@ -166,7 +173,7 @@ def optimize(cons1, cons2, data_list_incidence,  year, sub_iter):
     hosp_scaling.append(eff_opt[2])
     death_scaling.append(eff_opt[3])
     
-    vax_hosp, vax_death = run_simulation_burden(eff_opt, beta_opt[0:3], beta_opt[3:],  sub_iter)
+    vax_hosp, vax_death = run_simulation_burden(eff_opt, beta_opt[0:3], beta_opt[3:], year,  sub_iter)
     print ("data vs calibration = "), sub_iter, data_hospitalization[sub_iter], data_mortality[sub_iter], vax_hosp, vax_death
     
      
@@ -238,6 +245,7 @@ if __name__ == "__main__":
 	elements = {}
 	
 	yearlist = ['2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2017-18']
+	yearlist = ['2012-13']
 	for year in yearlist:
 	    df  = pd.read_csv('sampled_parameter_1000_set_year_'+str(year)+'_10May2019.csv')
 	    iteration = df['iter'].tolist()
@@ -264,13 +272,15 @@ if __name__ == "__main__":
     
 	    data_list_incidence = [iteration, data_infections, data_hospitalization, data_mortality, data_incidence_H1_0, data_incidence_H1_5, data_incidence_H1_25, data_incidence_H1_65, data_incidence_H3_0, data_incidence_H3_5, data_incidence_H3_25, data_incidence_H3_65, data_incidence_B_0, data_incidence_B_5, data_incidence_B_25, data_incidence_B_65]
 	    
-	    myfile, writer=create_files()
-	    for num in xrange(1000):
+	    #myfile, writer=create_files()
+	    for num in xrange(1):
 		    print ("starting pool"), num
 		    beta_H1, beta_H3, beta_B, H1_0, H1_5, H1_25, H1_65, H3_0, H3_5, H3_25, H3_65, B_0, B_5, B_25, B_65, eff_hosp, eff_death, hosp_scaling, death_scaling = optimize(cons1, cons2, data_list_incidence, year, num)
-		    elem1 = [num, data_infections[num],beta_H1[0], beta_H3[0], beta_B[0], H1_0[0], H1_5[0], H1_25[0], H1_65[0], H3_0[0], H3_5[0], H3_25[0], H3_65[0], B_0[0], B_5[0], B_25[0], B_65[0], eff_hosp[0], eff_death[0], hosp_scaling[0], death_scaling[0]]
-		    writer.writerow(elem1)
-		    myfile.flush()
+		    incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH = run_efficacy_simulation(year, num)
+		    
+		    #elem1 = [num, data_infections[num],beta_H1[0], beta_H3[0], beta_B[0], H1_0[0], H1_5[0], H1_25[0], H1_65[0], H3_0[0], H3_5[0], H3_25[0], H3_65[0], B_0[0], B_5[0], B_25[0], B_65[0], eff_hosp[0], eff_death[0], hosp_scaling[0], death_scaling[0]]
+		    #writer.writerow(elem1)
+		    #myfile.flush()
 	    
 
 			

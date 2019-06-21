@@ -63,39 +63,30 @@ class run_Simulation:
 	dosesVaccinatedL =  empirical_vax_coverage_lowrisk * self.parameters.population_lowrisk
 	dosesVaccinatedH =  empirical_vax_coverage_highrisk * self.parameters.population_highrisk
 	
-	
-	
-	##coverage RELATIVE to each other (based is age-group 0.5 for Low risk age groups)
-	relative_coverage_L = (1.*dosesVaccinatedL/dosesVaccinatedL[1]) 
-	relative_coverage_H = (1.*dosesVaccinatedH/dosesVaccinatedL[1]) 
-	
-	#multiplication factor for final doses
-	
-	
-	
-	
 	if optimization:
 	    ## add zero to self.parameters.PVuniversa which represents unvaccinated first age class
-	    PVuniversal_lowrisk = np.insert(self.parameters.PVuniversal[:len(self.parameters.population_lowrisk)-1], 0,0)
-	    PVuniversal_highrisk = np.insert(self.parameters.PVuniversal[len(self.parameters.population_lowrisk)-1:], 0,0)
+	    PVuniversal_lowrisk = self.parameters.PVuniversal[:len(self.parameters.population_lowrisk)-1]
+	    PVuniversal_highrisk = self.parameters.PVuniversal[len(self.parameters.population_lowrisk)-1:]
 	    doses_NL = PVuniversal_lowrisk*universal_vacDoses
 	    doses_NH = PVuniversal_highrisk*universal_vacDoses
-	    x_fac = (universal_vacDoses + seasonal_vacDoses)/(1.*(sum(relative_coverage_L)+ sum(relative_coverage_H)))
-	    doses_TL = (x_fac * relative_coverage_L) - doses_NL
-	    doses_TH = (x_fac * relative_coverage_H) - doses_NH
+	    doses_TL = (seasonal_vacDoses* dosesVaccinatedL)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
+	    doses_TH = (seasonal_vacDoses* dosesVaccinatedH)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
+	    
+	    doses_NL = np.insert(doses_NL, 0,0)
+	    doses_NH = np.insert(doses_NH, 0,0)
 	    
 	
+	
 	else:
-	    xFac_N = universal_vacDoses/(1.*(sum(relative_coverage_L)+ sum(relative_coverage_H)))
-	    xFac_T = seasonal_vacDoses/(1.*(sum(relative_coverage_L)+ sum(relative_coverage_H)))
-	
-	    doses_NL = xFac_N *  relative_coverage_L
-	    doses_NH = xFac_N *  relative_coverage_H
-	    doses_TL = xFac_T *  relative_coverage_L
-	    doses_TH = xFac_T *  relative_coverage_H
+	    doses_NL = (universal_vacDoses * dosesVaccinatedL)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
+	    doses_NH = (universal_vacDoses * dosesVaccinatedH)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
+	    doses_TL = (seasonal_vacDoses * dosesVaccinatedL)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
+	    doses_TH = (seasonal_vacDoses * dosesVaccinatedH)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
 	
 	
-        return doses_TL, doses_TH, doses_NL, doses_NH
+	#print doses_NL.sum() + doses_NH.sum(), universal_vacDoses, doses_TL.sum()+doses_TH.sum(), seasonal_vacDoses
+	print doses_TL, doses_TH, doses_NL, doses_NH
+	return doses_TL, doses_TH, doses_NL, doses_NH
     
     ###################################
     
@@ -347,14 +338,14 @@ class run_Simulation:
         N_age_specific = SUL+ IUL_H1+ IUL_H3+ IUL_B+ RUL_H1 + RUL_H3+ RUL_B + SUH+ IUH_H1+ IUH_H3+ IUH_B+ RUH_H1 + RUH_H3 + RUH_B +STL+ ITL_H1+ ITL_H3+ ITL_B+ RTL_H1 + RTL_H3 + RTL_B +  STH+ ITH_H1+ ITH_H3+ ITH_B+ RTH_H1 + RTH_H3 + RTH_B +  SNL+ INL_H1+ INL_H3+ INL_B+ RNL_H1 + RNL_H3 + RNL_B +  SNH+ INH_H1+ INH_H3+ INH_B+ RNH_H1 + RNH_H3 + RNH_B
             
 	
-        Lambda_H1 = self.parameters.transmissionScaling_H1 * self.parameters.susceptibility_H1\
+        Lambda_H1 = self.parameters.beta_H1 * self.parameters.susceptibility_H1\
 		    * np.dot(self.parameters.contactMatrix, self.parameters.transmissibility * (IUL_H1 + IUH_H1 + ITL_H1 + ITH_H1+ INL_H1+ INH_H1)) / N_age_specific
 	
-	Lambda_H3 = self.parameters.transmissionScaling_H3 * self.parameters.susceptibility_H3 \
+	Lambda_H3 = self.parameters.beta_H3 * self.parameters.susceptibility_H3 \
                  * np.dot(self.parameters.contactMatrix, 
                              self.parameters.transmissibility * (IUL_H3 + IUH_H3 + ITL_H3 + ITH_H3 + INL_H3+ INH_H3)) / N_age_specific
 		
-	Lambda_B = self.parameters.transmissionScaling_B * self.parameters.susceptibility_B \
+	Lambda_B = self.parameters.beta_B * self.parameters.susceptibility_B \
                  * np.dot(self.parameters.contactMatrix,
                              self.parameters.transmissibility * (IUL_B + IUH_B + ITL_B + ITH_B+ INL_B+ INH_B)) / N_age_specific
 	
@@ -950,6 +941,9 @@ class run_Simulation:
   
     def doses_used(self):
 	return self.vaccine_doses_T.sum(), self.vaccine_doses_N.sum(), self.vaccine_doses_total.sum()
+    
+    def doses_used_agewise(self):
+	return list(self.vaccine_doses_T), list(self.vaccine_doses_N), list(self.vaccine_doses_total)
     
     def optimization_output(self):
 	return self.parameters.proportionVaccinatedTypical ,  self.parameters.proportionVaccinatedUniversal

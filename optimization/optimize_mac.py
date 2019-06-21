@@ -13,13 +13,20 @@ def optimize_universal_vaccine_distribution(season, proportion_universal_vacDose
 	o = Optimization.optimization(season = season, proportion_universalVaccine_doses = proportion_universal_vacDoses, objective = objective, index = index)
 	o.optimize()
 	
+	PVbest, seasonal_vacDoses, universal_vacDoses, total_doses,seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise, outcome = o.optimization_output()
+	
+	return PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,list(outcome)
+	
+	
+	
 		
 		
 ######################################################################################		
 if __name__ == "__main__":
 	
 	for num in xrange(1):
-		optimize_universal_vaccine_distribution('2011-12', 0.5, 'totalInfections', num)
+		PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,outcome = optimize_universal_vaccine_distribution('2011-12', 0.25, 'totalInfections', num)
+		print PVbest, seasonal_vacDoses, universal_vacDoses, total_doses
     
     
 	

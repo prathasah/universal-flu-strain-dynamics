@@ -7,16 +7,17 @@ from ages import ages
 ## 1: vaccinate all in age class a with universal.
 
 class optimization:
-    objectiveMap = {'totalInfections': 'totalInfections',
-                    'totalDeaths': 'totalDeaths',
-		     'totalBurden': 'totalDALY',
-		     'totalCost': 'totalCosts',
-                    'totalHospitalizations': 'totalHospitalizations',
-		    'Infections': 'infections',
+    DetailedobjectiveMap = {'Infections': 'infections',
                     'Deaths': 'deaths',
 		     'Burden': 'DALY',
 		     'Cost': 'Costs',
                     'Hospitalizations': 'hospitalizations'}
+    
+    objectiveMap = {'totalInfections': 'totalInfections',
+                    'totalDeaths': 'totalDeaths',
+		     'totalBurden': 'totalDALY',
+		     'totalCost': 'totalCosts',
+                    'totalHospitalizations': 'totalHospitalizations'}
 
     def __init__(self, objective = None, optimRuns = 1, season = None, proportion_universalVaccine_doses = 0,  paramValues = {}, index = None):
 
@@ -40,10 +41,8 @@ class optimization:
         # Only update for new PVPWVals
         if np.any(PVPWVals != self.PVUniversal):
 	    self.s = Simulation.run_Simulation(season= self.season, proportion_universalVaccine_doses = self.proportional_universal, paramValues = {"PVuniversal": PVPWVals}, index=self.index, optimization = True)
-	    seasonal_vacDoses, universal_vacDoses, total_doses = self.s.doses_used()
-	    self.totalvacsUsed = total_doses
-	    self.UniversalvacsUsed = universal_vacDoses
-	    self.SeasonalsvacsUsed = seasonal_vacDoses
+	   
+	 
 
     def evaluateObjective(self, PVPWVals):
 	""" main objective function to minimize. Returns infection simulation instance and the objective (totalinfections or ....)"""
@@ -52,13 +51,13 @@ class optimization:
     
 	return getattr(self.s, self.objectiveMap[self.objective])
     
+    
+    def evaluateDetailedObjective(self, PVPWVals):
+	""" main objective function to minimize. Returns infection simulation instance and the objective (totalinfections or ....)"""
+	self.solve(PVPWVals)
+    
+	return getattr(self.s, self.DetailedobjectiveMap[self.objective[5:]])
 
-    #def totalVacsConditions(self, PVPWVals):
-    #	self.solve(PVPWVals)
-    #	return (self.vacNumbers - self.vacsUsed)
-
-    #def totalVacsCondition(self, i):
-    #	return lambda PVPWVals: self.totalVacsConditions(PVPWVals)[i]
     
     def totalVacsUsed(self):
 	return lambda x:  1 - sum(x)
@@ -92,8 +91,10 @@ class optimization:
 
 	    ## proportion of people in ageclass a that are vaccinated with universal vaccines (2).
 	    ## initialize  with same proportion of universal doses to all age classes
-            PV0 = np.full(self.proportionVaccinatedLength*2, 1./(self.proportionVaccinatedLength*2))
-	   
+            
+	    PV0 = np.random.rand(self.proportionVaccinatedLength*2)
+	    # normalize so that they sum to 1
+	    PV0 = PV0/PV0.sum()
 
 
             PVPWValsOpt = fmin_cobyla(self.evaluateObjective,
@@ -110,18 +111,16 @@ class optimization:
                 
                 minObjective = self.evaluateObjective(PVPWValsOpt)
                 self.PVBest = PVPWValsOpt
-		
-        
+	
+
+
+    def optimization_output(self):
+
 	self.solve(self.PVBest)
-	bestPV = [round(num,2) for num in list(self.PVBest)]
-	#print ("minimum objective"), minObjective, bestPV, sum(PVPWValsOpt), round(min(PVPWValsOpt),3), self.totalvacsUsed, self.UniversalvacsUsed, self.SeasonalsvacsUsed
+	seasonal_vacDoses, universal_vacDoses, total_doses = self.s.doses_used()
+	seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise = self.s.doses_used_agewise()
+	return list(self.PVBest), seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise, list(self.evaluateDetailedObjective(self.PVBest))
 
 
-    def short_optimization_output(self):
 
-	return self.simulatedR0, list(self.vacsUsed)[0], self.evaluateObjective(self.PVBest), list(self.PVBest), list(self.Vaccinatedtotal), self.evaluateDetailedObjective(self.PVBest)
-
-
-    def low_vaccine_optimization(self):
-	return sum(list(self.infections)), sum(list(self.hospitalizations)), sum(list(self.deaths))
 	

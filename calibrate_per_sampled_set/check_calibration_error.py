@@ -17,7 +17,7 @@ def run_efficacy_simulation(season, sub_iter):
 if __name__ == "__main__":
 	
 	
-	df = pd.read_csv("./1.calibration_results_May28_2019/results_calibrated_parameters_year_2011-12_COMBINED_May28_2019.csv")
+	df = pd.read_csv("./2.calibration_results_June10_2019/2.results_calibrated_parameters_year_2014-15_COMBINED_June10_2019.csv")
 	data_year = df['year'].tolist()
 	data_infections = df['data_incidence'].tolist()
 	data_hosp = df['data_hospitalizations'].tolist()
@@ -55,10 +55,10 @@ if __name__ == "__main__":
 	incidence_B_25 = []
 	incidence_B_65 = []
 	
-	for sub_index in xrange(1):
-		print sub_index
-		incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH = run_efficacy_simulation(data_year[sub_index], sub_index)
+	for sub_index in xrange(1000):
 		
+		incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH = run_efficacy_simulation(data_year[sub_index], sub_index)
+		print sub_index, data_infections[sub_index]/1e6, (sum(incidenceL) + sum(incidenceH))/1e6
 		
 		hosp_raw = sum(hospitalizationsL) + sum(hospitalizationsH)
 		calib_hosp.append(hosp_raw)

@@ -130,10 +130,10 @@ class Parameters:
 	if calibration:
 	    df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/sampled_parameter_1000_set_year_"+season+"_10May2019.csv")
 	else:
-	    df = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/1.calibration_results_May28_2019/1.results_calibrated_parameters_year_2011-12_COMBINED_May28_2019.csv")
+	    df = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/2.calibration_results_June10_2019/2.results_calibrated_parameters_year_"+season+"_COMBINED_June10_2019.csv")
         for p in dir(epidemiology):
 	    #if module returns a numbers, then..
-	    if calibration and p in ["prob_death_scaling", "prob_hosp_scaling", "transmissionScaling_H1", "transmissionScaling_H3", "transmissionScaling_B", "vac_eff_hospitalization", "vac_eff_mortality", "susceptibility_H1PW", "susceptibility_H3PW", "susceptibility_BPW"]: continue
+	    if calibration and p in ["prob_death_scaling", "prob_hosp_scaling", "beta_H1", "beta_H3", "beta_B", "vac_eff_hospitalization", "vac_eff_mortality", "susceptibility_H1PW", "susceptibility_H3PW", "susceptibility_BPW"]: continue
 	    func = getattr(epidemiology, p)
 	    if isinstance(func,types.FunctionType):
     
@@ -173,9 +173,9 @@ class Parameters:
 	
 	if calibration:
 	    if "betaList" in self.passedParamValues:
-		self.transmissionScaling_H1 =  self.passedParamValues["betaList"][0]
-		self.transmissionScaling_H3 =  self.passedParamValues["betaList"][1]
-		self.transmissionScaling_B =   self.passedParamValues["betaList"][2]
+		self.beta_H1 =  self.passedParamValues["betaList"][0]
+		self.beta_H3 =  self.passedParamValues["betaList"][1]
+		self.beta_B =   self.passedParamValues["betaList"][2]
 	    
 	    if "vac_eff_hospitalization" in self.passedParamValues: 
 		self.vac_eff_hospitalization = self.passedParamValues["vac_eff_hospitalization"]
