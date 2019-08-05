@@ -24,8 +24,8 @@ def optimize_universal_vaccine_distribution(season, proportion_universal_vacDose
 ######################################################################################		
 if __name__ == "__main__":
 	
-	for num in xrange(1):
-		PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,outcome = optimize_universal_vaccine_distribution('2011-12', 0.25, 'totalInfections', num)
+	for num in xrange(492,493):
+		PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,outcome = optimize_universal_vaccine_distribution('2016-17', 0.75, 'totalHospitalizations', num)
 		print PVbest, seasonal_vacDoses, universal_vacDoses, total_doses
     
     

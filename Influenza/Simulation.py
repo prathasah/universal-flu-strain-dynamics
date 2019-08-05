@@ -19,13 +19,12 @@ class run_Simulation:
         # Initial condition
         self.Y0 = np.zeros(46 * self.parameters.ages.size)
         self.hasSolution = False
-	    
 	#############################    
 	self.resetSolution()
 	
 	self.proportional_universal = proportion_universalVaccine_doses
 	
-		   
+
         # Update initial condition for ODEs
         self.updateIC()
 	
@@ -33,12 +32,24 @@ class run_Simulation:
 	tStart = self.tMin
 	self.solve(tStart = tStart, tEnd = tEnd)
 	
-	import matplotlib.pyplot as plt
-	times = [num for num in xrange(181)]
-	#plt.plot(times, self.IUL_H1.sum(axis=1))
+    
+	
+	#import matplotlib.pyplot as plt
+	#times = [num for num in xrange(181)]
+	#plt.plot(times, (self.IUL_H1).sum(axis=1), label = "IUL_H1")
+	#plt.plot(times, (self.IUL_H3).sum(axis=1), label = "IUL_H3")
+	#plt.plot(times, (self.IUL_B).sum(axis=1), label = "IUL_B")
+	#plt.plot(times, (self.ITL_H1).sum(axis=1), label = "ITL_H1")
+	#plt.plot(times, (self.ITL_H3).sum(axis=1), label = "ITL_H3")
+	#plt.plot(times, (self.ITL_B).sum(axis=1), label = "ITL_B")
+	#plt.plot(times, (self.INL_H1).sum(axis=1), label = "INL_H1")
+	#plt.plot(times, (self.INL_H3).sum(axis=1), label = "INL_H3")
+	#plt.plot(times, (self.INL_B).sum(axis=1), label = "INL_B")
+	#plt.legend()
 	#plt.show()
 	
         self.updateStats()
+	if optimization: print self.parameters.PVuniversal, self.parameters.PVuniversal.sum(), self.totalHospitalizations/1e3
 	
 	
 
@@ -57,14 +68,13 @@ class run_Simulation:
     def update_doses_distributed(self, seasonal_vacDoses, universal_vacDoses, optimization = False):
 
 	
-	empirical_vax_coverage_lowrisk, empirical_vax_coverage_highrisk  = vc.age_specific_vaccination_coverage(self.season)
-	
+	empirical_vax_coverage_lowrisk, empirical_vax_coverage_highrisk  = vc.age_specific_vaccination_coverage(self.season, self.parameters.population, self.parameters.population_lowrisk, self.parameters.population_highrisk)
 	#raw dose uptake among age groups
 	dosesVaccinatedL =  empirical_vax_coverage_lowrisk * self.parameters.population_lowrisk
 	dosesVaccinatedH =  empirical_vax_coverage_highrisk * self.parameters.population_highrisk
 	
 	if optimization:
-	    ## add zero to self.parameters.PVuniversa which represents unvaccinated first age class
+	    	    
 	    PVuniversal_lowrisk = self.parameters.PVuniversal[:len(self.parameters.population_lowrisk)-1]
 	    PVuniversal_highrisk = self.parameters.PVuniversal[len(self.parameters.population_lowrisk)-1:]
 	    doses_NL = PVuniversal_lowrisk*universal_vacDoses
@@ -73,9 +83,7 @@ class run_Simulation:
 	    doses_TH = (seasonal_vacDoses* dosesVaccinatedH)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
 	    
 	    doses_NL = np.insert(doses_NL, 0,0)
-	    doses_NH = np.insert(doses_NH, 0,0)
-	    
-	
+	    doses_NH = np.insert(doses_NH, 0,0)	
 	
 	else:
 	    doses_NL = (universal_vacDoses * dosesVaccinatedL)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
@@ -83,9 +91,6 @@ class run_Simulation:
 	    doses_TL = (seasonal_vacDoses * dosesVaccinatedL)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
 	    doses_TH = (seasonal_vacDoses * dosesVaccinatedH)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
 	
-	
-	#print doses_NL.sum() + doses_NH.sum(), universal_vacDoses, doses_TL.sum()+doses_TH.sum(), seasonal_vacDoses
-	print doses_TL, doses_TH, doses_NL, doses_NH
 	return doses_TL, doses_TH, doses_NL, doses_NH
     
     ###################################
@@ -106,6 +111,7 @@ class run_Simulation:
 	proportionVaccinatedNL = doses_NL/(1.* self.parameters.population_lowrisk)
 	proportionVaccinatedNH = doses_NH/(1.* self.parameters.population_highrisk)
 	
+	
 
 	if not self.hasSolution:
             # S
@@ -114,50 +120,59 @@ class run_Simulation:
             self.Y0[ 0: : 46] =  (1 - proportionVaccinatedTL -  proportionVaccinatedNL) * self.parameters.population_lowrisk 
 
 	    ## SUH
-            self.Y0[ 7: : 46] =  (1 - proportionVaccinatedTH -  proportionVaccinatedNH) * self.parameters.population_highrisk 
-  
+            self.Y0[ 7: : 46] =  (1 - proportionVaccinatedTH -  proportionVaccinatedNH) * self.parameters.population_highrisk
+
 	    ## STL
-            self.Y0[ 14: : 46] = proportionVaccinatedTL * self.parameters.population_lowrisk 
+            self.Y0[ 14: : 46] = proportionVaccinatedTL * self.parameters.population_lowrisk
 	    
 	    ## STH
             self.Y0[ 21: : 46] =  proportionVaccinatedTH * self.parameters.population_highrisk
 
 	    ## SNL
-            self.Y0[ 28: : 46] = proportionVaccinatedNL * self.parameters.population_lowrisk 
+            self.Y0[ 28: : 46] = proportionVaccinatedNL * self.parameters.population_lowrisk
+	    
+	    
+  
 	    ## SNH 
             self.Y0[ 35: : 46] = proportionVaccinatedNH  * self.parameters.population_highrisk
-	
+	    
+	   
             # initially infection
-	    initially_infected = 500
+	    initially_infected = 75000
+	    
 	    # IUL_H1, IUL_H3, IUL_B
-	    self.Y0[ 1: : 46] = np.full(self.parameters.ages.size,initially_infected)
-	    self.Y0[ 2: : 46] = np.full(self.parameters.ages.size,initially_infected)
-	    self.Y0[ 3: : 46] = np.full(self.parameters.ages.size,initially_infected)
+	     # 1% of susceptibles are infected
+	    self.Y0[ 1: : 46] = 0.01*self.Y0[ 0: : 46]
+	    self.Y0[ 2: : 46] = 0.01*self.Y0[ 0: : 46]
+	    self.Y0[ 3: : 46] = 0.01*self.Y0[ 0: : 46]
+	    
 	    
 	    # IUH_H1, IUH_H3, IUH_B
-            self.Y0[ 8: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 9: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 10: : 46] = np.full(self.parameters.ages.size, initially_infected)
+            self.Y0[ 8: : 46] =  0.01*self.Y0[ 7: : 46]
+	    self.Y0[ 9: : 46] =  0.01*self.Y0[ 7: : 46]
+	    self.Y0[ 10: : 46] =  0.01*self.Y0[ 7: : 46]
 	    
+	    
+	    #1% of ITL, ITH, INL and INHs are initially infected 
 	    # ITL_H1, ITL_H3, ITL_B
-	    self.Y0[ 15: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 16: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 17: : 46] = np.full(self.parameters.ages.size, initially_infected)
+	    self.Y0[ 15: : 46] = 0.01*doses_TL
+	    self.Y0[ 16: : 46] = 0.01*doses_TL
+	    self.Y0[ 17: : 46] = 0.01*doses_TL
 	    
 	    # ITH_H1, ITH_H3, ITH_B
-	    self.Y0[ 22: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 23: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 24: : 46] = np.full(self.parameters.ages.size, initially_infected)
+	    self.Y0[ 22: : 46] = 0.01*doses_TH
+	    self.Y0[ 23: : 46] = 0.01*doses_TH
+	    self.Y0[ 24: : 46] = 0.01*doses_TH
 	    
 	    # INL_H1, INL_H3, INL_B
-	    self.Y0[ 29: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 30: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 31: : 46] = np.full(self.parameters.ages.size, initially_infected)
+	    self.Y0[ 29: : 46] = 0.01*doses_NL
+	    self.Y0[ 30: : 46] = 0.01*doses_NL
+	    self.Y0[ 31: : 46] = 0.01*doses_NL
 	    
 	    # INH_H1, INH_H3, INH_B
-	    self.Y0[ 36: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 37: : 46] = np.full(self.parameters.ages.size, initially_infected)
-	    self.Y0[ 38: : 46] = np.full(self.parameters.ages.size, initially_infected)
+	    self.Y0[ 36: : 46] = 0.01*doses_NH
+	    self.Y0[ 37: : 46] = 0.01*doses_NH
+	    self.Y0[ 38: : 46] = 0.01*doses_NH
 
             # S: Remove those new infectious people from the susceptibles
             self.Y0[ 0: : 46] -= (self.Y0[ 1: : 46] + self.Y0[ 2: : 46] + self.Y0[ 3: : 46])
@@ -166,7 +181,8 @@ class run_Simulation:
 	    self.Y0[ 21: : 46] -= (self.Y0[ 22: : 46] + self.Y0[ 23: : 46] + self.Y0[ 24: : 46])
 	    self.Y0[ 28: : 46] -= (self.Y0[ 29: : 46] + self.Y0[ 30: : 46] + self.Y0[ 31: : 46])
 	    self.Y0[ 35: : 46] -= (self.Y0[ 32: : 46] + self.Y0[ 33: : 46] + self.Y0[ 34: : 46])
- 
+	    
+	
             # R
 	    self.Y0[ 4:  : 46] = 0.
 	    self.Y0[ 5:  : 46] = 0.
@@ -208,6 +224,7 @@ class run_Simulation:
 	    self.Y0[ 21 : : 46] = STH + (1 - proportionVaccinatedTH) * SUH
 	    self.Y0[ 28 : : 46] = SNL + (1 - proportionVaccinatedNL) * SUL
 	    self.Y0[ 35 : : 46] = SNH + (1 - proportionVaccinatedNH) * SUH
+	   
 	    
 	    #I
 	    self.Y0[ 1 : : 46] = IUL_H1
@@ -377,9 +394,13 @@ class run_Simulation:
 	dRUH_H1    = self.parameters.recoveryRate * IUH_H1
 	dRUH_H3    = self.parameters.recoveryRate * IUH_H3
 	dRUH_B    = self.parameters.recoveryRate * IUH_B
+
+		
+	
 	
 	#TL
 	dSTL = doses_TL - ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H1) * Lambda_H1 + (1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H3) * Lambda_H3+ (1 - self.parameters.SeasonalVaccineEfficacyVsInfection_B) * Lambda_B)  *STL
+	
 
         dITL_H1 = ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H1) * Lambda_H1 * STL) - (self.parameters.recoveryRate ) * ITL_H1
 	dITL_H3 = ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H3) * Lambda_H3 * STL) - (self.parameters.recoveryRate) * ITL_H3
@@ -552,7 +573,7 @@ class run_Simulation:
         
         # Integrate the ODE
         from scipy.integrate import odeint
-        self.Y, infodict = odeint(self.RHS,self.Y0.copy(),self.T, mxstep = 1000, full_output =True)
+	self.Y, infodict = odeint(self.RHS,self.Y0.copy(),self.T, mxstep = 1000, full_output =True)
 	
 	#print ("steps==="),  self.Y.shape, (np.unique(infodict['tcur']))
         Z = self.Y.copy()
@@ -709,7 +730,6 @@ class run_Simulation:
 	self.infectionsVH_H3 =  self.RTH_H3[-1,: ] + self.RNH_H3[-1,: ] + self.ITH_H3[-1,: ] + self.INH_H3[-1,: ]
 	self.infectionsVH_B  =  self.RTH_B[-1,: ]  + self.RNH_B[-1,: ]  + self.ITH_B[-1,: ] + self.INH_B[-1,: ]
 
-
 	self.infectionsL_H1 = self.infectionsUL_H1 + self.infectionsVL_H1
 	self.infectionsH_H1 = self.infectionsUH_H1 + self.infectionsVH_H1
 	self.infectionsL_H3 = self.infectionsUL_H3 + self.infectionsVL_H3
@@ -733,6 +753,8 @@ class run_Simulation:
 	
 	self.infections  = self.infectionsU + self.infectionsV
         self.totalInfections = self.infections.sum()
+	
+	
 	
 	self.vaccine_doses_T = (self.vacc_TL[-1,: ] + self.vacc_TH[-1,: ])
 	self.vaccine_doses_N = (self.vacc_NL[-1,: ] + self.vacc_NH[-1,: ])
@@ -833,8 +855,10 @@ class run_Simulation:
 	self.hospitalizationsVL =  self.hospitalizationsVL_H1 + self.hospitalizationsVL_H3 + self.hospitalizationsVL_B
 	
 	self.hospitalizations = self.hospitalizationsL + self.hospitalizationsH
-	self.totalHospitalizations = self.hospitalizations.sum()
 	
+	
+	self.totalHospitalizations = self.hospitalizations.sum()
+	 
 	#######################################################
 	self.prob_death = self.parameters.prob_death_scaling * self.parameters.relative_prob_death
 	

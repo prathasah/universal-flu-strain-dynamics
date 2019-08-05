@@ -17,7 +17,7 @@ def run_efficacy_simulation(season, sub_iter):
 if __name__ == "__main__":
 	
 	
-	df = pd.read_csv("./2.calibration_results_June10_2019/2.results_calibrated_parameters_year_2014-15_COMBINED_June10_2019.csv")
+	df = pd.read_csv("./3.calibration_results_June25_2019/3.results_calibrated_parameters_year_2013-14_COMBINED_June25_2019.csv")
 	data_year = df['year'].tolist()
 	data_infections = df['data_incidence'].tolist()
 	data_hosp = df['data_hospitalizations'].tolist()

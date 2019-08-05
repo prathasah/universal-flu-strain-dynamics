@@ -16,7 +16,7 @@ from copy import deepcopy
 def run_efficacy_simulation(season, sub_iter):
 	s = Simulation.run_Simulation(season = season, index = sub_iter)
 	seasonal_vacDoses, universal_vacDoses, total_doses = s.doses_used()
-	print ("check seasonal, universal doses "), seasonal_vacDoses, universal_vacDoses
+	#print ("check seasonal, universal doses "), seasonal_vacDoses, universal_vacDoses
 	incidenceL, incidenceH, infections_H1, infections_H3, infections_B, perc_H1, perc_H3, perc_B,hospitalizationsL, hospitalizationsH, deathsL, deathsH = s.calibration_output()
 	return incidenceL, incidenceH, infections_H1, infections_H3, infections_B, hospitalizationsL, hospitalizationsH, deathsL, deathsH
 ##########################################

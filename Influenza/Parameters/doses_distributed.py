@@ -253,6 +253,9 @@ def doses_applied_before_start_season(season):
 ## * Test function
 
 if __name__ == '__main__':
+    
+    print sum([doses_applied_per_time_function("2011-12")(t) for t in xrange(180)])
+    """
     for season in set(df['season']):
         df_season = df[df['season'] == season]
 
@@ -269,7 +272,7 @@ if __name__ == '__main__':
 
         y0 = doses_applied_before_start_season(season)
 
-        season_duration_days = 210
+        season_duration_days = 181
         year = int(season[:-3])
         start_date = pd.to_datetime(dict({'year':df['season year']}.items() + start_of_season.items()))[0]
 
@@ -317,7 +320,7 @@ if __name__ == '__main__':
 
         # ax.plot(real_days,
         #         [doses_applied_per_time_function(season)(t) for t in ts])
-        """
+        
         if save_plots:
             fig.savefig("doses_function_{}.pdf".format(season))
             plt.close()
