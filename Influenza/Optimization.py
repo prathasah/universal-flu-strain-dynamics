@@ -5,6 +5,8 @@ import Parameters
 from ages import ages
 import doses_distributed as dd
 import vaccination_coverage as vc
+from random import shuffle
+from scipy.optimize import basinhopping
 
 ## PVPWVals: is a list with zero and ones for each age class. 0 = vaccinate all in age class a with seasonal
 ## 1: vaccinate all in age class a with universal.
@@ -58,6 +60,8 @@ class optimization:
 	if (PVPWVals <0).any(): return np.inf
 	self.solve(PVPWVals)
 	if (self.s.SUL <0).any() or (self.s.SUH <0).any() or (self.s.STL <0).any() or (self.s.STH <0).any() or (self.s.SNL <0).any() or (self.s.SNH <0).any() : return np.inf
+	if np.isnan(PVPWVals).any(): return np.inf
+	print ("--->"), PVPWVals[:5], PVPWVals.sum(), self.s.totalHospitalizations/1e3
 	return getattr(self.s, self.objectiveMap[self.objective])
     
     
@@ -91,7 +95,8 @@ class optimization:
     def upperCondition(self, i):
 	#1 - PVPWal should be greater than zero
         return lambda PVPWVals: 1.0 - PVPWVals[i]
-   
+    
+
     def optimize(self):
         from scipy.optimize import fmin_cobyla
 	from scipy.optimize import minimize
@@ -118,11 +123,13 @@ class optimization:
 	    while not valid_condition:
 		condition1 = False
 		while not condition1:
-		    PV0 = np.random.rand(self.proportionVaccinatedLength*2)
+		    PV0_raw = np.random.rand(self.proportionVaccinatedLength*2)
 		    # normalize so that they sum to 1
-		    PV0 = PV0/PV0.sum()
-		    PV0_raw_lowrisk = PV0[:self.proportionVaccinatedLength]
-		    PV0_raw_highrisk = PV0[self.proportionVaccinatedLength:]
+		    PV0_raw = PV0_raw/PV0_raw.sum()
+		    #PV0_raw = sorted(PV0_raw, reverse = True)
+		    PV0_raw_lowrisk = PV0_raw[:self.proportionVaccinatedLength]
+		    PV0_raw_highrisk = PV0_raw[self.proportionVaccinatedLength:]
+		    shuffle(PV0_raw_lowrisk)
 		    PV0_raw_highrisk = sorted(PV0_raw_highrisk)
 		    PV0 = np.array(list(PV0_raw_lowrisk) + list(PV0_raw_highrisk))
 		    
@@ -133,14 +140,15 @@ class optimization:
 		self.solve(PV0)
 		condition2 = (self.s.SUL >=0).all() and (self.s.SUH >=0).all() and (self.s.STL >=0).all() and (self.s.STH >=0).all() and (self.s.SNL >=0).all() and (self.s.SNH >=0).all()
 		
-		#print (self.s.SUL >=0).all(), (self.s.SUH >=0).all(),(self.s.STL >=0).all(), (self.s.STH >=0).all(),  (self.s.SNL >=0).all(), (self.s.SNH >=0).all()
+		
 		valid_condition = condition1 and condition2
-		#print PV0, condition1, condition2
+		print PV0[:5], condition1, condition2
+		print ("all conds"), (self.s.SUL >=0).all(), (self.s.SUH >=0).all(),(self.s.STL >=0).all(), (self.s.STH >=0).all(),  (self.s.SNL >=0).all(), (self.s.SNH >=0).all()
 		
 
 	  
 
-
+	    
             PVPWValsOpt = fmin_cobyla(self.evaluateObjective,
                                       PV0,
                                      conds,
@@ -148,9 +156,13 @@ class optimization:
                                       rhobeg = 0.005,
 	   			      rhoend=0.000001,
                                      disp = 0)
+	    
+	    
+	   # minimizer_kwargs = dict(method="fmin_cobyla",constraints= conds)
+	    #PVPWValsOpt =  basinhopping(self.evaluateObjective, PV0, minimizer_kwargs= minimizer_kwargs, niter=10)
 
 	    print ("PVPWals"), PVPWValsOpt, self.evaluateObjective(PVPWValsOpt)
-	    print ("PV0"), PV0, PV0- PVPWValsOpt
+	    print ("PV0"), PV0, PV0
 	    if (minObjective == None) \
                     or (self.evaluateObjective(PVPWValsOpt) < minObjective):
                 

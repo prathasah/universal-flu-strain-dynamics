@@ -26,7 +26,7 @@ if __name__ == "__main__":
 	
 	for num in xrange(492,493):
 		PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,outcome = optimize_universal_vaccine_distribution('2016-17', 0.75, 'totalHospitalizations', num)
-		print PVbest, seasonal_vacDoses, universal_vacDoses, total_doses
+		#print PVbest, seasonal_vacDoses, universal_vacDoses, total_doses
     
     
 	

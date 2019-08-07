@@ -49,7 +49,7 @@ class run_Simulation:
 	#plt.show()
 	
         self.updateStats()
-	if optimization: print self.parameters.PVuniversal, self.parameters.PVuniversal.sum(), self.totalHospitalizations/1e3
+	#if optimization: print ("--->"), self.parameters.PVuniversal[:5], self.parameters.PVuniversal.sum(), self.totalHospitalizations/1e3
 	
 	
 
