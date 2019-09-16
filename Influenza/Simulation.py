@@ -1,9 +1,7 @@
 import random
 import numpy as np
 import sys
-sys.path.insert(0, r'./Influenza/Parameters')
 sys.path.insert(0, r'../Influenza/Parameters')
-sys.path.insert(0, r'../../Influenza/Parameters')
 import Parameters
 import vaccination_coverage as vc
 import doses_distributed as dd
@@ -32,21 +30,25 @@ class run_Simulation:
 	tStart = self.tMin
 	self.solve(tStart = tStart, tEnd = tEnd)
 	
-    
-	
-	#import matplotlib.pyplot as plt
-	#times = [num for num in xrange(181)]
+	"""
+	import matplotlib.pyplot as plt
+	times = [num for num in xrange(self.tMax+1)]
+	#plt.plot(times, (self.SUL).sum(axis=1)+(self.SUH).sum(axis=1)+(self.STL).sum(axis=1)+(self.STH).sum(axis=1)+(self.SNL).sum(axis=1)+(self.SNH).sum(axis=1), label = "S")
+	plt.plot(times, (self.IUL_H1).sum(axis=1)+(self.IUL_H3).sum(axis=1)+(self.IUL_B).sum(axis=1)+(self.IUH_H1).sum(axis=1)+(self.IUH_H3).sum(axis=1)+(self.IUH_B).sum(axis=1) + (self.ITL_H1).sum(axis=1)+(self.ITL_H3).sum(axis=1)+(self.ITL_B).sum(axis=1)+(self.ITH_H1).sum(axis=1)+(self.ITH_H3).sum(axis=1)+(self.ITH_B).sum(axis=1)+ (self.INL_H1).sum(axis=1)+(self.INL_H3).sum(axis=1)+(self.INL_B).sum(axis=1)+(self.INH_H1).sum(axis=1)+(self.INH_H3).sum(axis=1)+(self.INH_B).sum(axis=1), label = "I")
+	#plt.plot(times, (self.SUH).sum(axis=1), label = "SUH")
 	#plt.plot(times, (self.IUL_H1).sum(axis=1), label = "IUL_H1")
 	#plt.plot(times, (self.IUL_H3).sum(axis=1), label = "IUL_H3")
-	#plt.plot(times, (self.IUL_B).sum(axis=1), label = "IUL_B")
+	plt.plot(times, (self.IUL_B).sum(axis=1), label = "IUL_B")
 	#plt.plot(times, (self.ITL_H1).sum(axis=1), label = "ITL_H1")
 	#plt.plot(times, (self.ITL_H3).sum(axis=1), label = "ITL_H3")
-	#plt.plot(times, (self.ITL_B).sum(axis=1), label = "ITL_B")
+	plt.plot(times, (self.ITL_B).sum(axis=1), label = "ITL_B")
 	#plt.plot(times, (self.INL_H1).sum(axis=1), label = "INL_H1")
 	#plt.plot(times, (self.INL_H3).sum(axis=1), label = "INL_H3")
-	#plt.plot(times, (self.INL_B).sum(axis=1), label = "INL_B")
-	#plt.legend()
-	#plt.show()
+	plt.plot(times, (self.INL_B).sum(axis=1), label = "INL_B")
+	plt.axhline(y=0)
+	plt.legend()
+	plt.show()
+	"""
 	
         self.updateStats()
 	#if optimization: print ("--->"), self.parameters.PVuniversal[:5], self.parameters.PVuniversal.sum(), self.totalHospitalizations/1e3
@@ -77,13 +79,18 @@ class run_Simulation:
 	    	    
 	    PVuniversal_lowrisk = self.parameters.PVuniversal[:len(self.parameters.population_lowrisk)-1]
 	    PVuniversal_highrisk = self.parameters.PVuniversal[len(self.parameters.population_lowrisk)-1:]
-	    doses_NL = PVuniversal_lowrisk*universal_vacDoses
-	    doses_NH = PVuniversal_highrisk*universal_vacDoses
+	    PVuniversal_lowrisk = np.insert(PVuniversal_lowrisk, 0,0)
+	    PVuniversal_highrisk = np.insert(PVuniversal_highrisk, 0,0)
+	    
+	    raw_universal_doses_L = PVuniversal_lowrisk * self.parameters.population_lowrisk
+	    raw_universal_doses_H = PVuniversal_highrisk * self.parameters.population_highrisk
+	    
+	    
+	    doses_NL = (universal_vacDoses* raw_universal_doses_L)/(1.*(sum(raw_universal_doses_L)+ sum(raw_universal_doses_H)))
+	    doses_NH = (universal_vacDoses* raw_universal_doses_H)/(1.*(sum(raw_universal_doses_L)+ sum(raw_universal_doses_H)))
 	    doses_TL = (seasonal_vacDoses* dosesVaccinatedL)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
 	    doses_TH = (seasonal_vacDoses* dosesVaccinatedH)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
-	    
-	    doses_NL = np.insert(doses_NL, 0,0)
-	    doses_NH = np.insert(doses_NH, 0,0)	
+	     
 	
 	else:
 	    doses_NL = (universal_vacDoses * dosesVaccinatedL)/(1.* (dosesVaccinatedL.sum()+ dosesVaccinatedH.sum()))
@@ -121,9 +128,10 @@ class run_Simulation:
 
 	    ## SUH
             self.Y0[ 7: : 46] =  (1 - proportionVaccinatedTH -  proportionVaccinatedNH) * self.parameters.population_highrisk
-
+	    
 	    ## STL
             self.Y0[ 14: : 46] = proportionVaccinatedTL * self.parameters.population_lowrisk
+	   
 	    
 	    ## STH
             self.Y0[ 21: : 46] =  proportionVaccinatedTH * self.parameters.population_highrisk
@@ -137,42 +145,42 @@ class run_Simulation:
             self.Y0[ 35: : 46] = proportionVaccinatedNH  * self.parameters.population_highrisk
 	    
 	   
-            # initially infection
-	    initially_infected = 75000
+            # proportion infected
+	    proportion_infected = 0.0003
 	    
 	    # IUL_H1, IUL_H3, IUL_B
 	     # 1% of susceptibles are infected
-	    self.Y0[ 1: : 46] = 0.01*self.Y0[ 0: : 46]
-	    self.Y0[ 2: : 46] = 0.01*self.Y0[ 0: : 46]
-	    self.Y0[ 3: : 46] = 0.01*self.Y0[ 0: : 46]
+	    self.Y0[ 1: : 46] = proportion_infected*self.Y0[ 0: : 46]
+	    self.Y0[ 2: : 46] = proportion_infected*self.Y0[ 0: : 46]
+	    self.Y0[ 3: : 46] = proportion_infected*self.Y0[ 0: : 46]
 	    
 	    
 	    # IUH_H1, IUH_H3, IUH_B
-            self.Y0[ 8: : 46] =  0.01*self.Y0[ 7: : 46]
-	    self.Y0[ 9: : 46] =  0.01*self.Y0[ 7: : 46]
-	    self.Y0[ 10: : 46] =  0.01*self.Y0[ 7: : 46]
+            self.Y0[ 8: : 46] =  proportion_infected*self.Y0[ 7: : 46]
+	    self.Y0[ 9: : 46] =  proportion_infected*self.Y0[ 7: : 46]
+	    self.Y0[ 10: : 46] =  proportion_infected*self.Y0[ 7: : 46]
 	    
 	    
 	    #1% of ITL, ITH, INL and INHs are initially infected 
 	    # ITL_H1, ITL_H3, ITL_B
-	    self.Y0[ 15: : 46] = 0.01*doses_TL
-	    self.Y0[ 16: : 46] = 0.01*doses_TL
-	    self.Y0[ 17: : 46] = 0.01*doses_TL
+	    self.Y0[ 15: : 46] = proportion_infected*doses_TL
+	    self.Y0[ 16: : 46] = proportion_infected*doses_TL
+	    self.Y0[ 17: : 46] = proportion_infected*doses_TL
 	    
 	    # ITH_H1, ITH_H3, ITH_B
-	    self.Y0[ 22: : 46] = 0.01*doses_TH
-	    self.Y0[ 23: : 46] = 0.01*doses_TH
-	    self.Y0[ 24: : 46] = 0.01*doses_TH
+	    self.Y0[ 22: : 46] = proportion_infected*doses_TH
+	    self.Y0[ 23: : 46] = proportion_infected*doses_TH
+	    self.Y0[ 24: : 46] = proportion_infected*doses_TH
 	    
 	    # INL_H1, INL_H3, INL_B
-	    self.Y0[ 29: : 46] = 0.01*doses_NL
-	    self.Y0[ 30: : 46] = 0.01*doses_NL
-	    self.Y0[ 31: : 46] = 0.01*doses_NL
+	    self.Y0[ 29: : 46] = proportion_infected*doses_NL
+	    self.Y0[ 30: : 46] = proportion_infected*doses_NL
+	    self.Y0[ 31: : 46] = proportion_infected*doses_NL
 	    
 	    # INH_H1, INH_H3, INH_B
-	    self.Y0[ 36: : 46] = 0.01*doses_NH
-	    self.Y0[ 37: : 46] = 0.01*doses_NH
-	    self.Y0[ 38: : 46] = 0.01*doses_NH
+	    self.Y0[ 36: : 46] = proportion_infected*doses_NH
+	    self.Y0[ 37: : 46] = proportion_infected*doses_NH
+	    self.Y0[ 38: : 46] = proportion_infected*doses_NH
 
             # S: Remove those new infectious people from the susceptibles
             self.Y0[ 0: : 46] -= (self.Y0[ 1: : 46] + self.Y0[ 2: : 46] + self.Y0[ 3: : 46])
@@ -181,6 +189,7 @@ class run_Simulation:
 	    self.Y0[ 21: : 46] -= (self.Y0[ 22: : 46] + self.Y0[ 23: : 46] + self.Y0[ 24: : 46])
 	    self.Y0[ 28: : 46] -= (self.Y0[ 29: : 46] + self.Y0[ 30: : 46] + self.Y0[ 31: : 46])
 	    self.Y0[ 35: : 46] -= (self.Y0[ 32: : 46] + self.Y0[ 33: : 46] + self.Y0[ 34: : 46])
+	    #print ("numbrt of initially infected ===="),((self.Y0[ 1: : 46] + self.Y0[ 2: : 46] + self.Y0[ 3: : 46])+ (self.Y0[ 8: : 46] + self.Y0[ 9: : 46] + self.Y0[ 10: : 46])+(self.Y0[ 15: : 46] + self.Y0[ 16: : 46] + self.Y0[ 17: : 46])+ (self.Y0[ 22: : 46] + self.Y0[ 23: : 46] + self.Y0[ 24: : 46])+ (self.Y0[ 29: : 46] + self.Y0[ 30: : 46] + self.Y0[ 31: : 46])+(self.Y0[ 32: : 46] + self.Y0[ 33: : 46] + self.Y0[ 34: : 46])).sum()/1e6
 	    
 	
             # R
@@ -394,13 +403,13 @@ class run_Simulation:
 	dRUH_H1    = self.parameters.recoveryRate * IUH_H1
 	dRUH_H3    = self.parameters.recoveryRate * IUH_H3
 	dRUH_B    = self.parameters.recoveryRate * IUH_B
-
+	
 		
 	
 	
 	#TL
 	dSTL = doses_TL - ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H1) * Lambda_H1 + (1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H3) * Lambda_H3+ (1 - self.parameters.SeasonalVaccineEfficacyVsInfection_B) * Lambda_B)  *STL
-	
+	#if t<5: print ("STL==="), t, STL
 
         dITL_H1 = ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H1) * Lambda_H1 * STL) - (self.parameters.recoveryRate ) * ITL_H1
 	dITL_H3 = ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H3) * Lambda_H3 * STL) - (self.parameters.recoveryRate) * ITL_H3
@@ -700,6 +709,7 @@ class run_Simulation:
         self.hasSolution = True
 
     def updateStats(self):
+	
 	    
 	self.NUL = self.SUL +  self.IUL_H1 + self.IUL_H3 + self.IUL_B + self.RUL_H1 +  self.RUL_H3 +  self.RUL_B  
 	self.NUH = self.SUH +  self.IUH_H1 + self.IUH_H3 + self.IUH_B + self.RUH_H1 +  self.RUH_H3 +  self.RUH_B
@@ -725,6 +735,7 @@ class run_Simulation:
 	self.infectionsUH_H1 =  self.RUH_H1[-1,: ] + self.IUH_H1[-1,: ]
 	self.infectionsUH_H3 =  self.RUH_H3[-1,: ] + self.IUH_H3[-1,: ]
 	self.infectionsUH_B  =  self.RUH_B[-1,: ]  + self.IUH_B[-1,: ]
+	
 	
 	self.infectionsVH_H1 =  self.RTH_H1[-1,: ] + self.RNH_H1[-1,: ] + self.ITH_H1[-1,: ] + self.INH_H1[-1,: ]
 	self.infectionsVH_H3 =  self.RTH_H3[-1,: ] + self.RNH_H3[-1,: ] + self.ITH_H3[-1,: ] + self.INH_H3[-1,: ]
@@ -758,6 +769,8 @@ class run_Simulation:
 	
 	self.vaccine_doses_T = (self.vacc_TL[-1,: ] + self.vacc_TH[-1,: ])
 	self.vaccine_doses_N = (self.vacc_NL[-1,: ] + self.vacc_NH[-1,: ])
+	self.vaccine_doses_NL = self.vacc_NL[-1,: ]
+	self.vaccine_doses_NH =  self.vacc_NH[-1,: ]
 	self.vaccine_doses_total = self.vaccine_doses_T + self.vaccine_doses_N
 	
 	#################################
@@ -855,7 +868,6 @@ class run_Simulation:
 	self.hospitalizationsVL =  self.hospitalizationsVL_H1 + self.hospitalizationsVL_H3 + self.hospitalizationsVL_B
 	
 	self.hospitalizations = self.hospitalizationsL + self.hospitalizationsH
-	
 	
 	self.totalHospitalizations = self.hospitalizations.sum()
 	 

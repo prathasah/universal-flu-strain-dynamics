@@ -248,13 +248,21 @@ def doses_applied_before_start_season(season):
     else:
         return int(round(doses[0]))
     
+def total_seasonal_doses_for_season(season):
+    ts = [x for x in xrange(200)]
+    y0 = doses_applied_before_start_season(season)
+    ys, infodict = odeint(lambda y, t: doses_applied_per_time_function(season)(t), y0, ts, full_output =True)
+    return max(ys)[0]
 
-
-## * Test function
 
 if __name__ == '__main__':
     
-    print sum([doses_applied_per_time_function("2011-12")(t) for t in xrange(180)])
+    season = "2016-17"
+    ts = [x for x in xrange(200)]
+    y0 = doses_applied_before_start_season(season)
+    ys, infodict = odeint(lambda y, t: doses_applied_per_time_function(season)(t), y0, ts, full_output =True)
+    print max(ys/1e6)[0]
+    #print ([doses_applied_per_time_function("2016-17")(t) for t in xrange(180)])
     """
     for season in set(df['season']):
         df_season = df[df['season'] == season]

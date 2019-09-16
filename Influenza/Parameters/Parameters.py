@@ -130,7 +130,7 @@ class Parameters:
 	if calibration:
 	    df  = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/sampled_parameter_1000_set_year_"+season+"_10May2019.csv")
 	else:
-	    df = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/3.calibration_results_June25_2019/3.results_calibrated_parameters_year_"+season+"_COMBINED_June25_2019.csv")
+	    df = pd.read_csv("/Users/prathasah/Dropbox (Bansal Lab)/Git-files/universal-flu-strain-dynamics/calibrate_per_sampled_set/5.calibration_results_Aug25_2019/5.results_calibrated_parameters_year_"+season+"_COMBINED_Aug25_2019.csv")
         for p in dir(epidemiology):
 	    #if module returns a numbers, then..
 	    if calibration and p in ["prob_death_scaling", "prob_hosp_scaling", "beta_H1", "beta_H3", "beta_B", "vac_eff_hospitalization", "vac_eff_mortality", "susceptibility_H1PW", "susceptibility_H3PW", "susceptibility_BPW"]: continue
@@ -168,7 +168,6 @@ class Parameters:
 	self.UniversalvaccineEfficacyVsInfection_H1 =np.array([min(1, num) for num in  (self.Universalvaccine_efficacy[0] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
 	self.UniversalvaccineEfficacyVsInfection_H3 =np.array([min(1, num) for num in (self.Universalvaccine_efficacy[1] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
 	self.UniversalvaccineEfficacyVsInfection_B = np.array([min(1, num) for num in (self.Universalvaccine_efficacy[2] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
-	
 	
 	
 	if calibration:

@@ -126,7 +126,7 @@ def get_vacEfficacy(year,num):
 if __name__ == "__main__":
     
     yearlist = ['2010-11', '2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2017-18']
-    
+    yearlist = ['2012-13']
     for year in yearlist:
         print ("computing....."), year
     
@@ -163,7 +163,7 @@ if __name__ == "__main__":
                   "highRiskhospitalizationRate_B_0","highRiskhospitalizationRate_B_5","highRiskhospitalizationRate_B_18","highRiskhospitalizationRate_B_50","highRiskhospitalizationRate_B_65", "highRiskhospitalizationRate_B_75", "vac_eff_hospitalization", "vac_eff_mortality",
                   "prob_outpatient_lowrisk_0","prob_outpatient_lowrisk_5","prob_outpatient_lowrisk_18" ,"prob_outpatient_lowrisk_65",
                         "prob_outpatient_highrisk_0" ,"prob_outpatient_highrisk_5" ,"prob_outpatient_highrisk_18" ,"prob_outpatient_highrisk_65"]
-        writer = csv.writer(open('sampled_parameter_1000_set_year_'+str(year)+'_10May2019.csv','wb'))
+        writer = csv.writer(open('sampled_parameter_1000_set_year_'+str(year)+'_10May2019_DEBUG.csv','wb'))
         writer.writerow(header)
          
         for num in xrange(1000):
@@ -197,13 +197,14 @@ if __name__ == "__main__":
             ##ref Table 2 (complete dataset information) of Assessment of influenza vaccine effectiveness in a sentinel surveillance network 2010-13, United States
             ##Benjamin J. Cowlinga, Shuo Fenga, Lyn Finelli, Andrea Steffens, Ashley Fowlkes
              
+             
             vac_eff_inf_0 = 0
             vac_eff_inf_6mo = numpy.random.triangular(0.5, 0.6, 0.68)
             vac_eff_inf_5 = numpy.random.triangular(0.35, 0.46, 0.56)
             vac_eff_inf_18 = numpy.random.triangular(0.26, 0.39, 0.50)
             vac_eff_inf_50 = numpy.random.triangular(0.08, 0.33, 0.51)
              
-            vac_eff_inf_all_ages = numpy.random.triangular(0.43, 0.49, 0.54)        
+            vac_eff_inf_all_ages = numpy.random.triangular(0.43, 0.49, 0.54)     
 
     
              

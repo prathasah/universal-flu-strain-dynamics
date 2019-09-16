@@ -5,7 +5,7 @@ import Parameters
 from ages import ages
 import doses_distributed as dd
 import vaccination_coverage as vc
-from random import shuffle
+from random import uniform
 from scipy.optimize import basinhopping
 
 ## PVPWVals: is a list with zero and ones for each age class. 0 = vaccinate all in age class a with seasonal
@@ -43,131 +43,100 @@ class optimization:
 	self.initial_seasonal_vacDoses = self.initial_vacDoses - self.initial_universal_vacDoses
 	total_doses_raw = (empirical_vax_coverage_lowrisk * self.parameters.population_lowrisk +  empirical_vax_coverage_highrisk * self.parameters.population_highrisk).sum()
 	self.seasonal_lowrisk_vaxcoverage = ((self.initial_seasonal_vacDoses * empirical_vax_coverage_lowrisk)/total_doses_raw)[1:]
-	
 	self.seasonal_highrisk_vaxcoverage = ((self.initial_seasonal_vacDoses * empirical_vax_coverage_highrisk)/total_doses_raw)[1:]
+	
+	###########
+	self.total_vacDoses = dd.total_seasonal_doses_for_season(self.season)
+	self.universal_total_vacDoses = self.total_vacDoses * self.proportional_universal
+	self.seasonal_total_vacDoses = self.total_vacDoses - self.universal_total_vacDoses
+	self.seasonal_overall_lowrisk_vaxcoverage = ((self.seasonal_total_vacDoses * empirical_vax_coverage_lowrisk)/total_doses_raw)[1:]
+	self.seasonal_overall_highrisk_vaxcoverage = ((self.seasonal_total_vacDoses * empirical_vax_coverage_highrisk)/total_doses_raw)[1:]
+	self.seasonal_overall_coverage = list(self.seasonal_overall_lowrisk_vaxcoverage) + list(self.seasonal_overall_highrisk_vaxcoverage)
+	
 
 
-        self.PVUniversal= None
-
-
-    def solve(self, PVPWVals):
+    def solve(self, universal_PVPWVals):
         # Only update for new PVPWVals
-	self.s = Simulation.run_Simulation(season= self.season, proportion_universalVaccine_doses = self.proportional_universal, paramValues = {"PVuniversal": PVPWVals}, index=self.index, optimization = True)
+	self.s = Simulation.run_Simulation(season= self.season, proportion_universalVaccine_doses = self.proportional_universal, paramValues = {"PVuniversal": universal_PVPWVals}, index=self.index, optimization = True)
 	   
 	 	
-    def evaluateObjective(self, PVPWVals):
+    def evaluateObjective(self, universal_PVPWVals):
 	""" main objective function to minimize. Returns infection simulation instance and the objective (totalinfections or ....)"""
-	if (PVPWVals <0).any(): return np.inf
-	self.solve(PVPWVals)
+	if (universal_PVPWVals <0).any(): return np.inf
+	self.solve(universal_PVPWVals)
 	if (self.s.SUL <0).any() or (self.s.SUH <0).any() or (self.s.STL <0).any() or (self.s.STH <0).any() or (self.s.SNL <0).any() or (self.s.SNH <0).any() : return np.inf
-	if np.isnan(PVPWVals).any(): return np.inf
-	print ("--->"), PVPWVals[:5], PVPWVals.sum(), self.s.totalHospitalizations/1e3
+	if np.isnan(universal_PVPWVals).any(): return np.inf
+	#print ("--->"),  [round(num,2) for num in list(self.s.vaccine_doses_NL[1:]/ self.parameters.population_lowrisk[1:])], self.s.totalHospitalizations/1e3
 	return getattr(self.s, self.objectiveMap[self.objective])
     
     
-    def evaluateDetailedObjective(self, PVPWVals):
+    def evaluateDetailedObjective(self, universal_PVPWVals):
 	""" main objective function to minimize. Returns infection simulation instance and the objective (totalinfections or ....)"""
-	self.solve(PVPWVals)
+	self.solve(universal_PVPWVals)
     
 	return getattr(self.s, self.DetailedobjectiveMap[self.objective[5:]])
 
+    def bounds(self):
+	return [(0, 1.0 - self.seasonal_overall_coverage[i]) for i in range(self.VaccinatedLength)]
     
-    def totalVacsUsed(self):
+    def acceptance_criteria(self, **kwargs):
+	print("in accept test")
+	x_new = kwargs['x_new']
+	test1 = [x <= 1 and x >=0 for x in x_new]
+	test2 = [x_new[i] + self.seasonal_overall_coverage[i] <=1 for i in xrange(len(x_new))]
+	return all(test1) and all(test2) 
+    ###################################################################
+    def print_fun(self, x, f, accepted):
+	    print("x value accepted at"), list(x),f/1000., accepted
+     ###################################################################
+    def generate_PV0(self):
 	
-	return lambda x:  1 - sum(x)
+	trial = 0
+	pseudo_coverage_limit = 1
+	valid_condition = False
+	while not valid_condition:
+	    valid_doses_condition = False
 
-    
-    def dosesL_less_than_popsize(self, i):
-	
-	##proportion vaccinated (both seasonal and universal vaccine) should be less than one
-	return lambda PVPWVals: 1.0 - ((PVPWVals[i]*self.initial_universal_vacDoses)/self.lowrisk_population[i]) - self.seasonal_lowrisk_vaxcoverage[i]
-    
-    def dosesH_less_than_popsize(self, i):
-	
-	##proportion vaccinated should be less than one
-	
-	return lambda PVPWVals: 1.0 - ((PVPWVals[i]*self.initial_universal_vacDoses)/self.highrisk_population[i-self.proportionVaccinatedLength]) - self.seasonal_lowrisk_vaxcoverage[i-self.proportionVaccinatedLength]
+	    while not valid_doses_condition:
+		##generate 16+15 random numbers (one less than required)
+		trial+=1
+		PV0 = np.array([uniform(0, max(pseudo_coverage_limit-num,0)) for num in self.seasonal_overall_coverage])[:-1]
+		doses_used = (PV0[:16] * self.parameters.population_lowrisk[1:]).sum() + (PV0[16:]*self.parameters.population_highrisk[1:-1]).sum()
+		valid_doses_condition = doses_used < self.universal_total_vacDoses
+		#print ("--->"), [round(num,2) for num in list(PV0)], pseudo_coverage_limit, trial
+		if trial > 100:
+		    pseudo_coverage_limit=pseudo_coverage_limit-0.01
+		    trial=0
 
-    def lowerCondition(self, i):
-	#the min values should be greater than zero
-	return lambda PVPWVals: PVPWVals[i]
+		
+	    doses_left = self.universal_total_vacDoses - doses_used
+	    if (self.seasonal_overall_coverage[-1 ] + (doses_left/ self.parameters.population_highrisk[-1])) < 1:
+		condition1 =True
+		PV0 = np.array(list(PV0) + [doses_left/ self.parameters.population_highrisk[-1]])
 
-    def upperCondition(self, i):
-	#1 - PVPWal should be greater than zero
-        return lambda PVPWVals: 1.0 - PVPWVals[i]
-    
+	    
+		self.solve(PV0)
+		
+		valid_condition = condition1 and (self.s.SUL >=0).all() and (self.s.SUH >=0).all() and (self.s.STL >=0).all() and (self.s.STH >=0).all() and (self.s.SNL >=0).all() and (self.s.SNH >=0).all()
+		print ("PV0 --->"),self.season, self.index, self.proportional_universal, valid_condition
+		if not valid_condition: print ("check... "), self.season, self.index, self.proportional_universal, condition1 , (self.s.SUL >=0).all() , (self.s.SUH >=0).all() , (self.s.STL >=0).all() , (self.s.STH >=0).all() , (self.s.SNL >=0).all() , (self.s.SNH >=0).all()
+		
+	return PV0
+	        
+	    
 
     def optimize(self):
         from scipy.optimize import fmin_cobyla
 	from scipy.optimize import minimize
 	
-	self.proportionVaccinatedLength = len(ages)-1
+	self.VaccinatedLength = (len(ages)-1)*2
 	
-	conds = [self.totalVacsUsed()]
+        PV0 = self.generate_PV0()
 
-	conds.extend([self.lowerCondition(i) for i in range(self.proportionVaccinatedLength)])
-	
-        conds.extend([self.upperCondition(i) for i in range(self.proportionVaccinatedLength)])
-	
-	conds.extend([self.dosesL_less_than_popsize(i) for i in range(self.proportionVaccinatedLength)])
-	conds.extend([self.dosesH_less_than_popsize(i) for i in range(self.proportionVaccinatedLength, self.proportionVaccinatedLength*2)])
-	
-        minObjective = None
+	result = basinhopping(self.evaluateObjective, PV0, T=5, niter=100, stepsize=0.5, accept_test=self.acceptance_criteria, callback=self.print_fun, niter_success=10, disp=False, minimizer_kwargs= {"method":"L-BFGS-B", "bounds": self.bounds(), "tol": 0.5,  'options': {'eps':0.05,'maxfun': 100}})
+	PVPWValsOpt=  result['x']
 
-        for i in range(self.optimRuns):
-
-	    ## proportion of people in ageclass a that are vaccinated with universal vaccines (2).
-	    ## initialize  with same proportion of universal doses to all age classes
-            
-	    valid_condition = False
-	    while not valid_condition:
-		condition1 = False
-		while not condition1:
-		    PV0_raw = np.random.rand(self.proportionVaccinatedLength*2)
-		    # normalize so that they sum to 1
-		    PV0_raw = PV0_raw/PV0_raw.sum()
-		    #PV0_raw = sorted(PV0_raw, reverse = True)
-		    PV0_raw_lowrisk = PV0_raw[:self.proportionVaccinatedLength]
-		    PV0_raw_highrisk = PV0_raw[self.proportionVaccinatedLength:]
-		    shuffle(PV0_raw_lowrisk)
-		    PV0_raw_highrisk = sorted(PV0_raw_highrisk)
-		    PV0 = np.array(list(PV0_raw_lowrisk) + list(PV0_raw_highrisk))
-		    
-		    
-		    PV0_lowrisk = 1.0 - self.seasonal_lowrisk_vaxcoverage - np.array([((PV0[i]*self.initial_universal_vacDoses)/self.lowrisk_population[i])  for i in range(self.proportionVaccinatedLength)])
-		    PV0_highrisk = 1.0 - self.seasonal_highrisk_vaxcoverage - np.array([((PV0[i]*self.initial_universal_vacDoses)/self.highrisk_population[i-self.proportionVaccinatedLength])  for i in range(self.proportionVaccinatedLength, self.proportionVaccinatedLength*2)])
-		    condition1 = (PV0_lowrisk >=0).all() and  (PV0_highrisk >=0).all() 
-		self.solve(PV0)
-		condition2 = (self.s.SUL >=0).all() and (self.s.SUH >=0).all() and (self.s.STL >=0).all() and (self.s.STH >=0).all() and (self.s.SNL >=0).all() and (self.s.SNH >=0).all()
-		
-		
-		valid_condition = condition1 and condition2
-		print PV0[:5], condition1, condition2
-		print ("all conds"), (self.s.SUL >=0).all(), (self.s.SUH >=0).all(),(self.s.STL >=0).all(), (self.s.STH >=0).all(),  (self.s.SNL >=0).all(), (self.s.SNH >=0).all()
-		
-
-	  
-
-	    
-            PVPWValsOpt = fmin_cobyla(self.evaluateObjective,
-                                      PV0,
-                                     conds,
-                                      maxfun = 10000,
-                                      rhobeg = 0.005,
-	   			      rhoend=0.000001,
-                                     disp = 0)
-	    
-	    
-	   # minimizer_kwargs = dict(method="fmin_cobyla",constraints= conds)
-	    #PVPWValsOpt =  basinhopping(self.evaluateObjective, PV0, minimizer_kwargs= minimizer_kwargs, niter=10)
-
-	    print ("PVPWals"), PVPWValsOpt, self.evaluateObjective(PVPWValsOpt)
-	    print ("PV0"), PV0, PV0
-	    if (minObjective == None) \
-                    or (self.evaluateObjective(PVPWValsOpt) < minObjective):
-                
-                minObjective = self.evaluateObjective(PVPWValsOpt)
-                self.PVBest = PVPWValsOpt
+	self.PVBest = PVPWValsOpt
 	
 
 
