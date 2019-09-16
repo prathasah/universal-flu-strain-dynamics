@@ -149,7 +149,6 @@ class run_Simulation:
 	    proportion_infected = 0.0003
 	    
 	    # IUL_H1, IUL_H3, IUL_B
-	     # 1% of susceptibles are infected
 	    self.Y0[ 1: : 46] = proportion_infected*self.Y0[ 0: : 46]
 	    self.Y0[ 2: : 46] = proportion_infected*self.Y0[ 0: : 46]
 	    self.Y0[ 3: : 46] = proportion_infected*self.Y0[ 0: : 46]
@@ -189,9 +188,7 @@ class run_Simulation:
 	    self.Y0[ 21: : 46] -= (self.Y0[ 22: : 46] + self.Y0[ 23: : 46] + self.Y0[ 24: : 46])
 	    self.Y0[ 28: : 46] -= (self.Y0[ 29: : 46] + self.Y0[ 30: : 46] + self.Y0[ 31: : 46])
 	    self.Y0[ 35: : 46] -= (self.Y0[ 32: : 46] + self.Y0[ 33: : 46] + self.Y0[ 34: : 46])
-	    #print ("numbrt of initially infected ===="),((self.Y0[ 1: : 46] + self.Y0[ 2: : 46] + self.Y0[ 3: : 46])+ (self.Y0[ 8: : 46] + self.Y0[ 9: : 46] + self.Y0[ 10: : 46])+(self.Y0[ 15: : 46] + self.Y0[ 16: : 46] + self.Y0[ 17: : 46])+ (self.Y0[ 22: : 46] + self.Y0[ 23: : 46] + self.Y0[ 24: : 46])+ (self.Y0[ 29: : 46] + self.Y0[ 30: : 46] + self.Y0[ 31: : 46])+(self.Y0[ 32: : 46] + self.Y0[ 33: : 46] + self.Y0[ 34: : 46])).sum()/1e6
 	    
-	
             # R
 	    self.Y0[ 4:  : 46] = 0.
 	    self.Y0[ 5:  : 46] = 0.
@@ -409,7 +406,6 @@ class run_Simulation:
 	
 	#TL
 	dSTL = doses_TL - ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H1) * Lambda_H1 + (1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H3) * Lambda_H3+ (1 - self.parameters.SeasonalVaccineEfficacyVsInfection_B) * Lambda_B)  *STL
-	#if t<5: print ("STL==="), t, STL
 
         dITL_H1 = ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H1) * Lambda_H1 * STL) - (self.parameters.recoveryRate ) * ITL_H1
 	dITL_H3 = ((1 - self.parameters.SeasonalVaccineEfficacyVsInfection_H3) * Lambda_H3 * STL) - (self.parameters.recoveryRate) * ITL_H3
