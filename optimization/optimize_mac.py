@@ -9,24 +9,21 @@ import subprocess
 
 
 def optimize_universal_vaccine_distribution(season, proportion_universal_vacDoses, objective, index):
-	#s = Simulation.run_Simulation(season = season, proportion_universalVaccine_doses = proportion_universal_vacDoses)
 	o = Optimization.optimization(season = season, proportion_universalVaccine_doses = proportion_universal_vacDoses, objective = objective, index = index)
 	o.optimize()
 	
-	PVbest, seasonal_vacDoses, universal_vacDoses, total_doses,seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise, outcome = o.optimization_output()
+	seasonal_vacDoses, universal_vacDoses, total_doses,best_SV_agewise_doses, best_UV_agewise_doses, SV_coverage, UV_coverage,total_outcome, outcome_agewise = o.optimization_output()
 	
-	return PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,list(outcome)
+	return seasonal_vacDoses, universal_vacDoses, total_doses,best_SV_agewise_doses, best_UV_agewise_doses, SV_coverage, UV_coverage,total_outcome, list(outcome_agewise)
 	
-	
-	
-		
 		
 ######################################################################################		
 if __name__ == "__main__":
 	
-	for num in xrange(400,401):
-		PVbest, seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise,outcome = optimize_universal_vaccine_distribution('2011-12', 0.25, 'totalHospitalizations', num)
-		#print PVbest, seasonal_vacDoses, universal_vacDoses, total_doses
+	for num in xrange(830,831):
+		
+		seasonal_vacDoses, universal_vacDoses, total_doses,best_SV_agewise_doses, best_UV_agewise_doses, SV_coverage, UV_coverage,total_outcome, outcome_agewise = optimize_universal_vaccine_distribution('2012-13', 0.25, 'totalDeaths', num)
+		print seasonal_vacDoses, universal_vacDoses, total_doses,total_outcome
     
     
 	

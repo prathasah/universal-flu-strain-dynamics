@@ -1,4 +1,4 @@
-from PiecewiseAgeParameter import PiecewiseAgeParameter, PiecewiseAgeRate
+from PiecewiseAgeParameter import PiecewiseAgeParameter, PiecewiseAgeRate, PiecewiseAgeNumber
 from ages import ages
 import demography
 import epidemiology
@@ -120,11 +120,14 @@ class Parameters:
 		self.setPWAttrFromPassedOrOther(costs, p)
 		
 	if optimization:
-	    if not "PVuniversal" in self.passedParamValues:
-		print ("Warning! No PVuniversal value supplied.")
+	    if not "UV_doses" in self.passedParamValues:
+		print ("Warning! Vaccination order of universal vaccine not supplied.")
 	    
-	    self.PVuniversal = np.array(self.passedParamValues["PVuniversal"])
+	
+	    self.UV_optimized_doses = np.array(self.passedParamValues["UV_doses"])
+	    self.SV_optimized_doses = np.array(self.passedParamValues["SV_doses"])
 	    
+
 		    
 	## read file for epidemiology code
 	if calibration:

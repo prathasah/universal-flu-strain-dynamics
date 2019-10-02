@@ -51,7 +51,7 @@ class run_Simulation:
 	"""
 	
         self.updateStats()
-	#if optimization: print ("--->"), self.parameters.PVuniversal[:5], self.parameters.PVuniversal.sum(), self.totalHospitalizations/1e3
+	
 	
 	
 
@@ -76,20 +76,20 @@ class run_Simulation:
 	dosesVaccinatedH =  empirical_vax_coverage_highrisk * self.parameters.population_highrisk
 	
 	if optimization:
-	    	    
-	    PVuniversal_lowrisk = self.parameters.PVuniversal[:len(self.parameters.population_lowrisk)-1]
-	    PVuniversal_highrisk = self.parameters.PVuniversal[len(self.parameters.population_lowrisk)-1:]
-	    PVuniversal_lowrisk = np.insert(PVuniversal_lowrisk, 0,0)
-	    PVuniversal_highrisk = np.insert(PVuniversal_highrisk, 0,0)
+	    doses_N = self.parameters.UV_optimized_doses
+	    raw_universal_doses_H = doses_N * self.parameters.proportionHighRisk
+	    raw_universal_doses_L = doses_N - raw_universal_doses_H
 	    
-	    raw_universal_doses_L = PVuniversal_lowrisk * self.parameters.population_lowrisk
-	    raw_universal_doses_H = PVuniversal_highrisk * self.parameters.population_highrisk
-	    
+	    doses_T = self.parameters.SV_optimized_doses
+	    raw_seasonal_doses_H = doses_T * self.parameters.proportionHighRisk
+	    raw_seasonal_doses_L = doses_T - raw_seasonal_doses_H
 	    
 	    doses_NL = (universal_vacDoses* raw_universal_doses_L)/(1.*(sum(raw_universal_doses_L)+ sum(raw_universal_doses_H)))
 	    doses_NH = (universal_vacDoses* raw_universal_doses_H)/(1.*(sum(raw_universal_doses_L)+ sum(raw_universal_doses_H)))
-	    doses_TL = (seasonal_vacDoses* dosesVaccinatedL)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
-	    doses_TH = (seasonal_vacDoses* dosesVaccinatedH)/(1.*(sum(dosesVaccinatedL)+ sum(dosesVaccinatedH)))
+	    doses_TL = (seasonal_vacDoses* raw_seasonal_doses_L)/(1.*(sum(raw_seasonal_doses_L)+ sum(raw_seasonal_doses_H)))
+	    doses_TH = (seasonal_vacDoses* raw_seasonal_doses_H)/(1.*(sum(raw_seasonal_doses_L)+ sum(raw_seasonal_doses_H)))
+	    #list(doses_N), list(doses_NH), list(doses_NL), 
+	    
 	     
 	
 	else:
@@ -112,7 +112,6 @@ class run_Simulation:
 	
 
 	doses_TL, doses_TH, doses_NL, doses_NH = self.update_doses_distributed(seasonal_vacDoses, universal_vacDoses, optimization = self.is_optimization)
-	
 	proportionVaccinatedTL = doses_TL/(1.* self.parameters.population_lowrisk)
 	proportionVaccinatedTH = doses_TH/(1.* self.parameters.population_highrisk)
 	proportionVaccinatedNL = doses_NL/(1.* self.parameters.population_lowrisk)
@@ -129,6 +128,7 @@ class run_Simulation:
 	    ## SUH
             self.Y0[ 7: : 46] =  (1 - proportionVaccinatedTH -  proportionVaccinatedNH) * self.parameters.population_highrisk
 	    
+	     
 	    ## STL
             self.Y0[ 14: : 46] = proportionVaccinatedTL * self.parameters.population_lowrisk
 	   
@@ -822,6 +822,7 @@ class run_Simulation:
 	self.hospitalizationsUH_H3 = self.infectionsUH_H3 * self.case_hospitalizationUH_H3 
 	self.hospitalizationsUH_B = self.infectionsUH_B * self.case_hospitalizationUH_B
 	
+	
 	################################################################################
 	self.case_hospitalizationVL_H1 = self.prob_hospV_H1
 	self.case_hospitalizationVH_H1 =  self.ratio_hosp_highriskV_H1 * self.case_hospitalizationVL_H1
@@ -925,9 +926,9 @@ class run_Simulation:
 	self.deathsVH_B  =    self.infectionsVH_B *  self.deathRateVH_B
 	
 	
-	self.deaths_H1 = self.deathsUL_H1 + self.deathsVL_H1 + self.deathsVL_H1 + self.deathsVH_H1
-	self.deaths_H3 = self.deathsUL_H3 + self.deathsVL_H3 + self.deathsVL_H3 + self.deathsVH_H3
-	self.deaths_B = self.deathsUL_B + self.deathsVL_B + self.deathsVL_B + self.deathsVH_B 
+	self.deaths_H1 = self.deathsUL_H1 + self.deathsVL_H1 + self.deathsUH_H1 + self.deathsVH_H1
+	self.deaths_H3 = self.deathsUL_H3 + self.deathsVL_H3 + self.deathsUH_H3 + self.deathsVH_H3
+	self.deaths_B = self.deathsUL_B + self.deathsVL_B + self.deathsUH_B + self.deathsVH_B 
 	self.deathsUL = self.deathsUL_H1 + self.deathsUL_H3 + self.deathsUL_B
 	self.deathsUH = self.deathsUH_H1 + self.deathsUH_H3 + self.deathsUH_B
 	self.deathsVL = self.deathsVL_H1 + self.deathsVL_H3 + self.deathsVL_B 
@@ -1008,5 +1009,5 @@ class run_Simulation:
     
 
     def debug_info(self):
-	return self.infectionsU.sum()
+	return self.totalDeaths
 

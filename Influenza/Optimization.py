@@ -1,12 +1,13 @@
 import numpy as np
 np.warnings.filterwarnings('ignore')
+from itertools import permutations
+from itertools import combinations
 import Simulation
-import Parameters
+import demography
 from ages import ages
 import doses_distributed as dd
 import vaccination_coverage as vc
-from random import uniform
-from scipy.optimize import basinhopping
+from operator import itemgetter
 
 ## PVPWVals: is a list with zero and ones for each age class. 0 = vaccinate all in age class a with seasonal
 ## 1: vaccinate all in age class a with universal.
@@ -24,128 +25,202 @@ class optimization:
 		     'totalCost': 'totalCosts',
                     'totalHospitalizations': 'totalHospitalizations'}
 
-    def __init__(self, objective = None, optimRuns = 1, season = None, proportion_universalVaccine_doses = 0,  paramValues = {}, index = None):
+    def __init__(self, objective = None, season = None, proportion_universalVaccine_doses = 0,  paramValues = {}, index = None):
 
-        self.optimRuns = optimRuns
-	
 
+	self.agelist = [0,0.5,5,20,30,40,50,65]
+	self.agelist_full = ages
+	self.vaccinated_agelist = [0.5,5,20,30,40,50,65]
+	self.full_agelist_dict = {0:[0], 0.5:[0.5], 5: [5,10,15], 20: [20,25],30: [30,35],40:[40,45],50:[50,55,60],65:[65,70,75]}
+    
         self.objective = objective
         self.proportional_universal = proportion_universalVaccine_doses
 	self.season = season
 	self.index = index
 	#optimization is FAlse just to extract defaul Parameter values
-	self.parameters = Parameters.Parameters(season, index, calibration = False, optimization=False)
-	self.lowrisk_population = self.parameters.population_lowrisk[1:]
-	self.highrisk_population = self.parameters.population_highrisk[1:]
-	empirical_vax_coverage_lowrisk, empirical_vax_coverage_highrisk  = vc.age_specific_vaccination_coverage(self.season, self.parameters.population, self.parameters.population_lowrisk, self.parameters.population_highrisk)
-	self.initial_vacDoses = dd.doses_applied_before_start_season(self.season)
-	self.initial_universal_vacDoses = self.initial_vacDoses * self.proportional_universal
-	self.initial_seasonal_vacDoses = self.initial_vacDoses - self.initial_universal_vacDoses
-	total_doses_raw = (empirical_vax_coverage_lowrisk * self.parameters.population_lowrisk +  empirical_vax_coverage_highrisk * self.parameters.population_highrisk).sum()
-	self.seasonal_lowrisk_vaxcoverage = ((self.initial_seasonal_vacDoses * empirical_vax_coverage_lowrisk)/total_doses_raw)[1:]
-	self.seasonal_highrisk_vaxcoverage = ((self.initial_seasonal_vacDoses * empirical_vax_coverage_highrisk)/total_doses_raw)[1:]
+	self.population = demography.return_demography(season).full(self.agelist)
+	self.population_full = demography.return_demography(season).full(self.agelist_full)
 	
-	###########
+	
 	self.total_vacDoses = dd.total_seasonal_doses_for_season(self.season)
 	self.universal_total_vacDoses = self.total_vacDoses * self.proportional_universal
 	self.seasonal_total_vacDoses = self.total_vacDoses - self.universal_total_vacDoses
-	self.seasonal_overall_lowrisk_vaxcoverage = ((self.seasonal_total_vacDoses * empirical_vax_coverage_lowrisk)/total_doses_raw)[1:]
-	self.seasonal_overall_highrisk_vaxcoverage = ((self.seasonal_total_vacDoses * empirical_vax_coverage_highrisk)/total_doses_raw)[1:]
-	self.seasonal_overall_coverage = list(self.seasonal_overall_lowrisk_vaxcoverage) + list(self.seasonal_overall_highrisk_vaxcoverage)
 	
+	empirical_vaccination_coverage = vc.reduced_age_specific_vaccination_coverage(self.season, self.agelist)
+	empirical_vaccination_coverage_full = vc.reduced_age_specific_vaccination_coverage(self.season, self.agelist_full)
+	
+	#raw dose uptake among age groups
+	dosesVaccinated_raw =  {c: a*b for (a,b,c) in zip(empirical_vaccination_coverage, self.population, self.agelist)}
+	self.dosesVaccinated = {age: (dosesVaccinated_raw[age]*self.total_vacDoses)/(1.*sum(dosesVaccinated_raw.values())) for age in self.agelist}
+	
+	dosesVaccinated_full_raw =  {c: a*b for (a,b,c) in zip(empirical_vaccination_coverage_full, self.population_full, self.agelist_full)}
+	
+	self.dosesVaccinated_full =  {age: (dosesVaccinated_full_raw[age]*self.total_vacDoses)/(1.*sum(dosesVaccinated_full_raw.values())) for age in self.agelist_full}
+	
+	
+    def all_agegroup_receive_doses(self, vax_order):
+	""" Do all the age groups chosen receive universal vaccines?"""
+	doses_left = self.universal_total_vacDoses
+	for group_id in vax_order:
+	    popsize = self.dosesVaccinated[group_id]
+	    doses_left -= popsize
+	    ##check if doses have run out
+	    if doses_left < 0 and group_id != vax_order[-1]: return False
+	    
+	return True
+    
+    
+    def all_UVdoses_distributed(self, vax_order, debug = False):
+	"""Are all the universal vaccine distributed? Ensure no vaccine wastage"""
+	doses_left = self.universal_total_vacDoses
+	if debug: print ("init universal doses"), doses_left
+	for age in vax_order[:-1]:
+	    ages_to_vax = self.full_agelist_dict[age]
+	    for agegroup in ages_to_vax:
+		popsize_vaxed = self.dosesVaccinated_full[agegroup]
+		doses_left -= popsize_vaxed	    
+	    if debug:
+		print ("cond=="), agegroup, popsize_vaxed, doses_left
+			
+	#final age groups to vaccinate    
+	age = vax_order[-1]
+	ages_to_vax_raw = self.full_agelist_dict[age]
+	ages_to_vax_raw = [(age, self.dosesVaccinated_full[age]) for age in ages_to_vax_raw]
+	##sort by popsize to avoid vaccine wastage
+	ages_to_vax = sorted(ages_to_vax_raw,key=itemgetter(1))
+	num_agegroups = len(ages_to_vax)
+	for agegroup, popsize_vaxed in ages_to_vax:
+	    ##either vaccinate in equal portions or popsize, which ever is smaller
+	    doses_left -= min(popsize_vaxed, (doses_left/(1. * num_agegroups)))
+	    num_agegroups-=1
+	    if debug: print ("cond=="), agegroup, popsize_vaxed, doses_left
+	    
+	##check if vaccines have been wasted 
+	if doses_left >0: return False
+	    
+	return True
+	  
+	  
+    def compute_full_agewise_doses(self, vax_order):
+	
+	UVdoses_full = {agegroup:0 for agegroup in self.agelist_full}
+	SVdoses_full = {agegroup:self.dosesVaccinated_full[agegroup] for agegroup in self.agelist_full}
+	
+	#self.all_UVdoses_distributed(vax_order, debug = True)
+	doses_left = self.universal_total_vacDoses
+	##everone in age groups except last get vaccinated
+	for age in vax_order[:-1]:
+	    ages_to_vax = self.full_agelist_dict[age]
+	    for agegroup in ages_to_vax:
+		popsize_vaxed = self.dosesVaccinated_full[agegroup]
+		UVdoses_full[agegroup] = popsize_vaxed
+		SVdoses_full[agegroup] = 0
+ 		doses_left -= UVdoses_full[agegroup]
+		
+	#final age groups to vaccinate    
+	age = vax_order[-1]
+	ages_to_vax_raw = self.full_agelist_dict[age]
+	ages_to_vax_raw = [(age, self.dosesVaccinated_full[age]) for age in ages_to_vax_raw]
+	##sort by popsize to avoid vaccine wastage
+	ages_to_vax = sorted(ages_to_vax_raw,key=itemgetter(1))
+	num_agegroups = len(ages_to_vax)
+	for agegroup, popsize_vaxed in ages_to_vax:
+	    ##either vaccinate in equal portions or popsize, which ever is smaller
+	    
+	    UVdoses_full[agegroup] = min(popsize_vaxed, (doses_left/(1. * num_agegroups)))
+	    SVdoses_full[agegroup] = popsize_vaxed - UVdoses_full[agegroup]
+	    doses_left -= UVdoses_full[agegroup]
+	    num_agegroups-=1
+	    
+	SV_agewise_doses_full = [SVdoses_full[age] for age in self.agelist_full]
+	UV_agewise_doses_full = [UVdoses_full[age] for age in self.agelist_full]
+	if doses_left>0: print ("WARNING-----> UV doses left"), self.proportional_universal , self.season ,self.index, vax_order, doses_left, sum(UV_agewise_doses_full), self.universal_total_vacDoses
 
-
-    def solve(self, universal_PVPWVals):
-        # Only update for new PVPWVals
-	self.s = Simulation.run_Simulation(season= self.season, proportion_universalVaccine_doses = self.proportional_universal, paramValues = {"PVuniversal": universal_PVPWVals}, index=self.index, optimization = True)
+	return np.array(SV_agewise_doses_full), np.array(UV_agewise_doses_full ) 
+	    
+    def compute_agewise_doses(self, vax_order):
+	UVdoses = {agegroup:0 for agegroup in self.agelist}
+	doses_left = self.universal_total_vacDoses
+	for agegroup in vax_order:
+	    popsize_vaxed = self.dosesVaccinated[agegroup]
+	    UVdoses[agegroup] = min(popsize_vaxed, doses_left)
+	    doses_left -= popsize_vaxed
+	    
+	UV_agewise_doses = [UVdoses[age] for age in self.agelist]
+	return UV_agewise_doses
+    
+    
+    def compute_seasonal_agewise_doses(self, UV_agewise_doses):
+	
+	total_doses = [self.dosesVaccinated[age] for age in self.agelist]
+	return [a-b for (a,b) in zip(total_doses , UV_agewise_doses)]
+    
+    
+    def compute_optimal_coverage(self,SV_agewise_doses, UV_agewise_doses):
+	
+	SV_coverage = [a/(1.*b) for (a,b) in zip(SV_agewise_doses, self.population)]
+	UV_coverage = [a/(1.*b) for (a,b) in zip(UV_agewise_doses, self.population)]
+	return SV_coverage, UV_coverage
+	
+    def solve(self, vax_order):
+	
+	SV_agewise_doses_full, UV_agewise_doses_full = self.compute_full_agewise_doses(vax_order)
+	self.s = Simulation.run_Simulation(season= self.season, proportion_universalVaccine_doses = self.proportional_universal, paramValues = {"SV_doses": SV_agewise_doses_full, "UV_doses": UV_agewise_doses_full}, index=self.index, optimization = False)
+	
 	   
 	 	
-    def evaluateObjective(self, universal_PVPWVals):
+    def evaluateObjective(self, vax_order):
 	""" main objective function to minimize. Returns infection simulation instance and the objective (totalinfections or ....)"""
-	if (universal_PVPWVals <0).any(): return np.inf
-	self.solve(universal_PVPWVals)
-	if (self.s.SUL <0).any() or (self.s.SUH <0).any() or (self.s.STL <0).any() or (self.s.STH <0).any() or (self.s.SNL <0).any() or (self.s.SNH <0).any() : return np.inf
-	if np.isnan(universal_PVPWVals).any(): return np.inf
-	#print ("--->"),  [round(num,2) for num in list(self.s.vaccine_doses_NL[1:]/ self.parameters.population_lowrisk[1:])], self.s.totalHospitalizations/1e3
+	self.solve(vax_order)
 	return getattr(self.s, self.objectiveMap[self.objective])
     
     
-    def evaluateDetailedObjective(self, universal_PVPWVals):
+    def evaluateDetailedObjective(self, vax_order):
 	""" main objective function to minimize. Returns infection simulation instance and the objective (totalinfections or ....)"""
-	self.solve(universal_PVPWVals)
+	self.solve(vax_order)
     
 	return getattr(self.s, self.DetailedobjectiveMap[self.objective[5:]])
 
-    def bounds(self):
-	return [(0, 1.0 - self.seasonal_overall_coverage[i]) for i in range(self.VaccinatedLength)]
-    
-    def acceptance_criteria(self, **kwargs):
-	print("in accept test")
-	x_new = kwargs['x_new']
-	test1 = [x <= 1 and x >=0 for x in x_new]
-	test2 = [x_new[i] + self.seasonal_overall_coverage[i] <=1 for i in xrange(len(x_new))]
-	return all(test1) and all(test2) 
-    ###################################################################
-    def print_fun(self, x, f, accepted):
-	    print("x value accepted at"), list(x),f/1000., accepted
-     ###################################################################
-    def generate_PV0(self):
-	
-	trial = 0
-	pseudo_coverage_limit = 1
-	valid_condition = False
-	while not valid_condition:
-	    valid_doses_condition = False
-
-	    while not valid_doses_condition:
-		##generate 16+15 random numbers (one less than required)
-		trial+=1
-		PV0 = np.array([uniform(0, max(pseudo_coverage_limit-num,0)) for num in self.seasonal_overall_coverage])[:-1]
-		doses_used = (PV0[:16] * self.parameters.population_lowrisk[1:]).sum() + (PV0[16:]*self.parameters.population_highrisk[1:-1]).sum()
-		valid_doses_condition = doses_used < self.universal_total_vacDoses
-		#print ("--->"), [round(num,2) for num in list(PV0)], pseudo_coverage_limit, trial
-		if trial > 100:
-		    pseudo_coverage_limit=pseudo_coverage_limit-0.01
-		    trial=0
-
-		
-	    doses_left = self.universal_total_vacDoses - doses_used
-	    if (self.seasonal_overall_coverage[-1 ] + (doses_left/ self.parameters.population_highrisk[-1])) < 1:
-		condition1 =True
-		PV0 = np.array(list(PV0) + [doses_left/ self.parameters.population_highrisk[-1]])
-
-	    
-		self.solve(PV0)
-		
-		valid_condition = condition1 and (self.s.SUL >=0).all() and (self.s.SUH >=0).all() and (self.s.STL >=0).all() and (self.s.STH >=0).all() and (self.s.SNL >=0).all() and (self.s.SNH >=0).all()
-		print ("PV0 --->"),self.season, self.index, self.proportional_universal, valid_condition
-		if not valid_condition: print ("check... "), self.season, self.index, self.proportional_universal, condition1 , (self.s.SUL >=0).all() , (self.s.SUH >=0).all() , (self.s.STL >=0).all() , (self.s.STH >=0).all() , (self.s.SNL >=0).all() , (self.s.SNH >=0).all()
-		
-	return PV0
-	        
-	    
-
+ 
     def optimize(self):
-        from scipy.optimize import fmin_cobyla
-	from scipy.optimize import minimize
-	
-	self.VaccinatedLength = (len(ages)-1)*2
-	
-        PV0 = self.generate_PV0()
 
-	result = basinhopping(self.evaluateObjective, PV0, T=5, niter=100, stepsize=0.5, accept_test=self.acceptance_criteria, callback=self.print_fun, niter_success=10, disp=False, minimizer_kwargs= {"method":"L-BFGS-B", "bounds": self.bounds(), "tol": 0.5,  'options': {'eps':0.05,'maxfun': 100}})
-	PVPWValsOpt=  result['x']
+	# number of age groups to be vaccinated
+	self.min_output = 10e100
+	self.optimized_age_group_vaxed = []
+	##evaluate increasing number of vaccinated age groups 
+	for number_vax_groups in [1,2,3,4,5,6,7]:
+	    if number_vax_groups > 2:
+		##combinations where order of all but last is not important
+		vax_options = combinations(self.vaccinated_agelist, number_vax_groups-1)
+		vax_options = [tuple(list(num) + [a]) for num in vax_options for a in self.vaccinated_agelist if a not in num]
+	    else:
+		##order does matter when number of vaccinated age groups is<=2 
+		vax_options = permutations(self.vaccinated_agelist, number_vax_groups)
+	    for vax_order in vax_options:
 
-	self.PVBest = PVPWValsOpt
-	
+		if self.all_agegroup_receive_doses(vax_order) and self.all_UVdoses_distributed(vax_order):
+		    output =  self.evaluateObjective(list(vax_order))
+		    ##debug
+		    print vax_order, self.objective, output,output < self.min_output, self.seasonal_total_vacDoses/1e6, self.universal_total_vacDoses/1e6
+		    UV_agewise_doses = self.compute_agewise_doses(vax_order)
+		    SV_agewise_doses = self.compute_seasonal_agewise_doses(UV_agewise_doses)
+		    seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise = self.s.doses_used_agewise()
+		    if output < self.min_output:
+			    self.min_output = output
+			    self.optimized_age_group_vaxed = vax_order
 
 
     def optimization_output(self):
 
-	self.solve(self.PVBest)
+	self.solve(self.optimized_age_group_vaxed)
+	best_UV_agewise_doses = self.compute_agewise_doses(self.optimized_age_group_vaxed)
+	best_SV_agewise_doses = self.compute_seasonal_agewise_doses(best_UV_agewise_doses)
+	SV_coverage, UV_coverage = self.compute_optimal_coverage(best_SV_agewise_doses, best_UV_agewise_doses)
+	
 	seasonal_vacDoses, universal_vacDoses, total_doses = self.s.doses_used()
 	seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise = self.s.doses_used_agewise()
-	return list(self.PVBest), seasonal_vacDoses, universal_vacDoses, total_doses, seasonal_vacDoses_agewise, universal_vacDoses_agewise, total_doses_agewise, list(self.evaluateDetailedObjective(self.PVBest))
+	
+	return seasonal_vacDoses, universal_vacDoses, total_doses, best_SV_agewise_doses, best_UV_agewise_doses, SV_coverage, UV_coverage, self.evaluateObjective(list(self.optimized_age_group_vaxed)),  list(self.evaluateDetailedObjective(self.optimized_age_group_vaxed))
 
 
 
