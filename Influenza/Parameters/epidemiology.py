@@ -47,20 +47,6 @@ def SeasonalVaccineEfficacyVsInfection_H3PW(df, index):
      df.loc[df['iter'] == index, "seasonal_vaccineEfficacy_H3_65"].iloc[0]],
     [0, 0.5,  5, 18, 50, 65])
 
-def age_specific_vaccineEfficacyVsInfectionPW(df, index):
-    
-    return PiecewiseAgeRate(
-    [df.loc[df['iter'] == index,  "age_specific_vaccineEfficacyVsInfection_0"].iloc[0],
-      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_0.5"].iloc[0],
-      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_5"].iloc[0],
-     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_18"].iloc[0],
-     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_50"].iloc[0]],
-    [0, 0.5,  5, 18, 50])
-
-
-def vaccineEfficacyVsInfection_all_ages(df, index):
-    
-    return df.loc[df['iter'] == index, "vaccineEfficacyVsInfection_all_ages"].iloc[0]
 
 def SeasonalVaccineEfficacyVsInfection_BPW(df, index):
     
@@ -72,6 +58,57 @@ def SeasonalVaccineEfficacyVsInfection_BPW(df, index):
      df.loc[df['iter'] == index, "seasonal_vaccineEfficacy_B_50"].iloc[0],
      df.loc[df['iter'] == index, "seasonal_vaccineEfficacy_B_65"].iloc[0]],
     [0, 0.5,  5, 18, 50, 65])
+
+
+def age_specific_vaccineEfficacyVsInfection_H1PW(df, index):
+    
+    return PiecewiseAgeRate(
+    [df.loc[df['iter'] == index,  "age_specific_vaccineEfficacyVsInfection_H1_0"].iloc[0],
+      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H1_0.5"].iloc[0],
+      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H1_9"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H1_18"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H1_50"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H1_65"].iloc[0]],
+    [0, 0.5,  9, 18, 50, 65])
+
+
+def vaccineEfficacyVsInfection_H1_all_ages(df, index):
+    
+    return df.loc[df['iter'] == index, "vaccineEfficacyVsInfection_H1_all_ages"].iloc[0]
+
+
+def age_specific_vaccineEfficacyVsInfection_H3PW(df, index):
+    
+    return PiecewiseAgeRate(
+    [df.loc[df['iter'] == index,  "age_specific_vaccineEfficacyVsInfection_H3_0"].iloc[0],
+      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H3_0.5"].iloc[0],
+      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H3_9"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H3_18"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H3_50"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_H3_65"].iloc[0]],
+    [0, 0.5,  9, 18, 50, 65])
+
+
+def vaccineEfficacyVsInfection_H3_all_ages(df, index):
+    
+    return df.loc[df['iter'] == index, "vaccineEfficacyVsInfection_H3_all_ages"].iloc[0]
+
+def age_specific_vaccineEfficacyVsInfection_BPW(df, index):
+    
+    return PiecewiseAgeRate(
+    [df.loc[df['iter'] == index,  "age_specific_vaccineEfficacyVsInfection_B_0"].iloc[0],
+      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_B_0.5"].iloc[0],
+      df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_B_9"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_B_18"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_B_50"].iloc[0],
+     df.loc[df['iter'] == index, "age_specific_vaccineEfficacyVsInfection_B_65"].iloc[0]],
+    [0, 0.5,  9, 18, 50, 65])
+
+
+def vaccineEfficacyVsInfection_B_all_ages(df, index):
+    
+    return df.loc[df['iter'] == index, "vaccineEfficacyVsInfection_B_all_ages"].iloc[0]
+
 
 def relative_vaccineEfficacyVsHospitalization_H1PW(df, index):
     

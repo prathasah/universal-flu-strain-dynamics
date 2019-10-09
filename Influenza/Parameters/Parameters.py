@@ -168,11 +168,11 @@ class Parameters:
 	else: self.Universalvaccine_efficacy =  [0.75,0.75, 0.75]
 	
 	
-	self.UniversalvaccineEfficacyVsInfection_H1 =np.array([min(1, num) for num in  (self.Universalvaccine_efficacy[0] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
-	self.UniversalvaccineEfficacyVsInfection_H3 =np.array([min(1, num) for num in (self.Universalvaccine_efficacy[1] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
-	self.UniversalvaccineEfficacyVsInfection_B = np.array([min(1, num) for num in (self.Universalvaccine_efficacy[2] * self.age_specific_vaccineEfficacyVsInfection)/self.vaccineEfficacyVsInfection_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_H1 =np.array([min(1, num) for num in  (self.Universalvaccine_efficacy[0] * self.age_specific_vaccineEfficacyVsInfection_H1)/self.vaccineEfficacyVsInfection_H1_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_H3 =np.array([min(1, num) for num in (self.Universalvaccine_efficacy[1] * self.age_specific_vaccineEfficacyVsInfection_H3)/self.vaccineEfficacyVsInfection_H3_all_ages])
+	self.UniversalvaccineEfficacyVsInfection_B = np.array([min(1, num) for num in (self.Universalvaccine_efficacy[2] * self.age_specific_vaccineEfficacyVsInfection_B)/self.vaccineEfficacyVsInfection_B_all_ages])
 	
-	
+
 	if calibration:
 	    if "betaList" in self.passedParamValues:
 		self.beta_H1 =  self.passedParamValues["betaList"][0]

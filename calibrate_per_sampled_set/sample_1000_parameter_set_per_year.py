@@ -87,12 +87,11 @@ def get_vacEfficacy(year,num):
     efficacy = {}
     for strain in ["H1N1", "H3N2", "B"]:
         efficacy[strain] = {}
-    
-        for age_group in ['0', '0.5-8', '9-17','18-49','50-64','65+']:
+        efficacy[strain]['0'] = 0
+        for age_group in [ '0.5-8', '9-17','18-49','50-64','65+']:
             #print ("check!!!!"), strain, age_group,len(df.loc[df['Subtype'] == strain]), df.loc[df['Subtype'] == strain, 'Age group'].iloc[0]
             #print ("check!!!!"), year, strain, age_group, strain not in df['Subtype'].unique()
                 
-            
             
             
             ## assume ve=0 for all age-groups if strain not present in the data-frame
@@ -105,9 +104,7 @@ def get_vacEfficacy(year,num):
                 right_ci = df.loc[(df['Subtype'] == strain) & (df['Age group']== "Any"), "High 95% CI"].iloc[0]
                 efficacy[strain][age_group] = numpy.random.triangular(left_ci, mean_ve, right_ci)/100.
                 
-            elif age_group=='0': efficacy[strain][age_group] = 0
-
-
+       
             else:
                 mean_ve = df.loc[(df['Subtype'] == strain) & (df['Age group']==age_group), "Mean"].iloc[0]
                 left_ci = max(df.loc[(df['Subtype'] == strain) & (df['Age group']==age_group), "Low 95% CI"].iloc[0],0)
@@ -122,17 +119,41 @@ def get_vacEfficacy(year,num):
 
     return efficacy
 
+###########################################################################      
+def get_relative_vac_eff(year):
+    
+    df = ve.ve_data[year]
+    rel_efficacy = {}
+    for strain in ["H1N1", "H3N2", "B"]:
+        rel_efficacy[strain] = {}
+        for age_group in ["Any",  '0.5-8', '9-17','18-49','50-64','65+']:
+            if df[df.Subtype == strain].shape[0] >1:strain1 = strain
+            else:strain1 = "Any"
+            mean_ve = df.loc[(df['Subtype'] == strain1) & (df['Age group']== age_group), "Mean"].iloc[0]
+            left_ci = max(df.loc[(df['Subtype'] == strain1) & (df['Age group']== age_group), "Low 95% CI"].iloc[0],0)
+            right_ci = df.loc[(df['Subtype'] == strain1) & (df['Age group']== age_group), "High 95% CI"].iloc[0]
+            rel_efficacy[strain][age_group] = numpy.random.triangular(left_ci, mean_ve, right_ci)
+    
+    
+    return rel_efficacy 
+
+
 ######################################################################################      
 if __name__ == "__main__":
     
-    yearlist = ['2010-11', '2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2017-18']
-    yearlist = ['2012-13']
+    yearlist = ['2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2017-18']
     for year in yearlist:
         print ("computing....."), year
     
         header = ["iter", "year","data_incidence", "data_hospitalizations", "data_mortality", "data_H1_0", "data_H1_5", "data_H1_25", "data_H1_65", "data_H3_0", "data_H3_5", "data_H3_25", "data_H3_65", "data_B_0", "data_B_5", "data_B_25", "data_B_65", "infectious_period_0", "infectious_period_15", "proportionHighRisk_0", "proportionHighRisk_2","proportionHighRisk_5","proportionHighRisk_19", "proportionHighRisk_25", "proportionHighRisk_50","proportionHighRisk_65",
-                  "age_specific_vaccineEfficacyVsInfection_0", "age_specific_vaccineEfficacyVsInfection_0.5",  "age_specific_vaccineEfficacyVsInfection_5","age_specific_vaccineEfficacyVsInfection_18","age_specific_vaccineEfficacyVsInfection_50",
-              "vaccineEfficacyVsInfection_all_ages",
+                  "age_specific_vaccineEfficacyVsInfection_H1_0", "age_specific_vaccineEfficacyVsInfection_H1_0.5",  "age_specific_vaccineEfficacyVsInfection_H1_9","age_specific_vaccineEfficacyVsInfection_H1_18","age_specific_vaccineEfficacyVsInfection_H1_50","age_specific_vaccineEfficacyVsInfection_H1_65",
+              "vaccineEfficacyVsInfection_H1_all_ages",
+              "age_specific_vaccineEfficacyVsInfection_H3_0", "age_specific_vaccineEfficacyVsInfection_H3_0.5",  "age_specific_vaccineEfficacyVsInfection_H3_9","age_specific_vaccineEfficacyVsInfection_H3_18","age_specific_vaccineEfficacyVsInfection_H3_50","age_specific_vaccineEfficacyVsInfection_H3_65",
+              "vaccineEfficacyVsInfection_H3_all_ages",
+              "age_specific_vaccineEfficacyVsInfection_B_0", "age_specific_vaccineEfficacyVsInfection_B_0.5",  "age_specific_vaccineEfficacyVsInfection_B_9","age_specific_vaccineEfficacyVsInfection_B_18","age_specific_vaccineEfficacyVsInfection_B_50","age_specific_vaccineEfficacyVsInfection_B_65",
+              "vaccineEfficacyVsInfection_B_all_ages",
+              
+              
                   "seasonal_vaccineEfficacy_H1_0", "seasonal_vaccineEfficacy_H1_0.5",  "seasonal_vaccineEfficacy_H1_9","seasonal_vaccineEfficacy_H1_18","seasonal_vaccineEfficacy_H1_50", "seasonal_vaccineEfficacy_H1_65",
                   "seasonal_vaccineEfficacy_H3_0", "seasonal_vaccineEfficacy_H3_0.5",  "seasonal_vaccineEfficacy_H3_9","seasonal_vaccineEfficacy_H3_18","seasonal_vaccineEfficacy_H3_50", "seasonal_vaccineEfficacy_H3_65",
                   "seasonal_vaccineEfficacy_B_0", "seasonal_vaccineEfficacy_B_0.5",  "seasonal_vaccineEfficacy_B_9","seasonal_vaccineEfficacy_B_18","seasonal_vaccineEfficacy_B_50" , "seasonal_vaccineEfficacy_B_65",
@@ -163,7 +184,7 @@ if __name__ == "__main__":
                   "highRiskhospitalizationRate_B_0","highRiskhospitalizationRate_B_5","highRiskhospitalizationRate_B_18","highRiskhospitalizationRate_B_50","highRiskhospitalizationRate_B_65", "highRiskhospitalizationRate_B_75", "vac_eff_hospitalization", "vac_eff_mortality",
                   "prob_outpatient_lowrisk_0","prob_outpatient_lowrisk_5","prob_outpatient_lowrisk_18" ,"prob_outpatient_lowrisk_65",
                         "prob_outpatient_highrisk_0" ,"prob_outpatient_highrisk_5" ,"prob_outpatient_highrisk_18" ,"prob_outpatient_highrisk_65"]
-        writer = csv.writer(open('sampled_parameter_1000_set_year_'+str(year)+'_10May2019_DEBUG.csv','wb'))
+        writer = csv.writer(open('sampled_parameter_1000_set_year_'+str(year)+'_1Oct2019_DEBUG.csv','wb'))
         writer.writerow(header)
          
         for num in xrange(1000):
@@ -176,6 +197,10 @@ if __name__ == "__main__":
             hospitalizations = get_hospitalization_data(year)
             mortality = get_mortality_data(year)
             seasonal_vacEfficacy = get_vacEfficacy(year, num)
+            relative_vacEfficacy = get_relative_vac_eff(year)
+            
+            
+
             H1_0, H1_5, H1_25, H1_65, H3_0, H3_5, H3_25, H3_65, B_0, B_5, B_25, B_65 = get_age_virologic_profile(year)
      
             ######################
@@ -198,14 +223,7 @@ if __name__ == "__main__":
             ##Benjamin J. Cowlinga, Shuo Fenga, Lyn Finelli, Andrea Steffens, Ashley Fowlkes
              
              
-            vac_eff_inf_0 = 0
-            vac_eff_inf_6mo = numpy.random.triangular(0.5, 0.6, 0.68)
-            vac_eff_inf_5 = numpy.random.triangular(0.35, 0.46, 0.56)
-            vac_eff_inf_18 = numpy.random.triangular(0.26, 0.39, 0.50)
-            vac_eff_inf_50 = numpy.random.triangular(0.08, 0.33, 0.51)
-             
-            vac_eff_inf_all_ages = numpy.random.triangular(0.43, 0.49, 0.54)     
-
+            
     
              
             #############################
@@ -432,8 +450,11 @@ if __name__ == "__main__":
      
              
             elements = [num, year, incidence, hospitalizations, mortality, H1_0, H1_5, H1_25, H1_65, H3_0, H3_5, H3_25, H3_65, B_0, B_5, B_25, B_65, infectious_period_0, infectious_period_15,  prop_high_risk_0, prop_high_risk_2,prop_high_risk_5,prop_high_risk_19, prop_high_risk_25, prop_high_risk_50, prop_high_risk_65,
-                         vac_eff_inf_0, vac_eff_inf_6mo, vac_eff_inf_5, vac_eff_inf_18, vac_eff_inf_50,
-                    vac_eff_inf_all_ages,
+                        
+                    0, relative_vacEfficacy['H1N1']['0.5-8'],relative_vacEfficacy['H1N1']['9-17'],relative_vacEfficacy['H1N1']['18-49'],relative_vacEfficacy['H1N1']['50-64'], relative_vacEfficacy['H1N1']['65+'],relative_vacEfficacy['H1N1']['Any'],
+                         0, relative_vacEfficacy['H3N2']['0.5-8'],relative_vacEfficacy['H3N2']['9-17'],relative_vacEfficacy['H3N2']['18-49'],relative_vacEfficacy['H3N2']['50-64'], relative_vacEfficacy['H3N2']['65+'],relative_vacEfficacy['H3N2']['Any'],
+                          0, relative_vacEfficacy['B']['0.5-8'],relative_vacEfficacy['B']['9-17'],relative_vacEfficacy['B']['18-49'],relative_vacEfficacy['B']['50-64'], relative_vacEfficacy['B']['65+'],relative_vacEfficacy['B']['Any'],
+                          
                         seasonal_vacEfficacy['H1N1']['0'], seasonal_vacEfficacy['H1N1']['0.5-8'],seasonal_vacEfficacy['H1N1']['9-17'],seasonal_vacEfficacy['H1N1']['18-49'],seasonal_vacEfficacy['H1N1']['50-64'], seasonal_vacEfficacy['H1N1']['65+'],
                          seasonal_vacEfficacy['H3N2']['0'], seasonal_vacEfficacy['H3N2']['0.5-8'],seasonal_vacEfficacy['H3N2']['9-17'],seasonal_vacEfficacy['H3N2']['18-49'],seasonal_vacEfficacy['H3N2']['50-64'], seasonal_vacEfficacy['H3N2']['65+'],
                           seasonal_vacEfficacy['B']['0'], seasonal_vacEfficacy['B']['0.5-8'],seasonal_vacEfficacy['B']['9-17'],seasonal_vacEfficacy['B']['18-49'],seasonal_vacEfficacy['B']['50-64'], seasonal_vacEfficacy['B']['65+'],
